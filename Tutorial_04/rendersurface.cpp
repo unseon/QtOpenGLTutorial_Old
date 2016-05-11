@@ -60,11 +60,12 @@ void Renderer::render()
                                            "uniform mat4 MVP;"
                                            "void main() {"
                                            "    gl_Position = MVP * vertices;"
-                                           "    fragmentColor = vertexColor"
+                                           "    fragmentColor = vertexColor;"
                                            "}");
         m_program->addShaderFromSourceCode(QOpenGLShader::Fragment,
+                                           "varying vec3 fragmentColor;"
                                            "void main() {"
-                                           "    gl_FragColor = vec4(fragmentColor.xyz, 1.0);"
+                                           "    gl_FragColor = vec4(fragmentColor, 1.0);"
                                            "}");
 
         m_program->bindAttributeLocation("vertices", 0);
@@ -75,41 +76,53 @@ void Renderer::render()
     m_program->bind();
 
     m_program->enableAttributeArray(0);
+    m_program->enableAttributeArray(1);
 
     static const GLfloat g_vertex_buffer_data[] = {
         -1.0f,-1.0f,-1.0f,
         -1.0f,-1.0f, 1.0f,
         -1.0f, 1.0f, 1.0f,
+
          1.0f, 1.0f,-1.0f,
         -1.0f,-1.0f,-1.0f,
         -1.0f, 1.0f,-1.0f,
+
          1.0f,-1.0f, 1.0f,
         -1.0f,-1.0f,-1.0f,
          1.0f,-1.0f,-1.0f,
+
          1.0f, 1.0f,-1.0f,
          1.0f,-1.0f,-1.0f,
         -1.0f,-1.0f,-1.0f,
+
         -1.0f,-1.0f,-1.0f,
         -1.0f, 1.0f, 1.0f,
         -1.0f, 1.0f,-1.0f,
+
          1.0f,-1.0f, 1.0f,
         -1.0f,-1.0f, 1.0f,
         -1.0f,-1.0f,-1.0f,
+
         -1.0f, 1.0f, 1.0f,
         -1.0f,-1.0f, 1.0f,
          1.0f,-1.0f, 1.0f,
+
          1.0f, 1.0f, 1.0f,
          1.0f,-1.0f,-1.0f,
          1.0f, 1.0f,-1.0f,
+
          1.0f,-1.0f,-1.0f,
          1.0f, 1.0f, 1.0f,
          1.0f,-1.0f, 1.0f,
+
          1.0f, 1.0f, 1.0f,
          1.0f, 1.0f,-1.0f,
         -1.0f, 1.0f,-1.0f,
+
          1.0f, 1.0f, 1.0f,
         -1.0f, 1.0f,-1.0f,
         -1.0f, 1.0f, 1.0f,
+
          1.0f, 1.0f, 1.0f,
         -1.0f, 1.0f, 1.0f,
          1.0f,-1.0f, 1.0f
@@ -154,6 +167,7 @@ void Renderer::render()
         0.820f,  0.883f,  0.371f,
         0.982f,  0.099f,  0.879f
     };
+
     m_program->setAttributeArray(0, GL_FLOAT, g_vertex_buffer_data, 3);
     m_program->setAttributeArray(1, GL_FLOAT, g_color_buffer_data, 3);
 
@@ -163,7 +177,7 @@ void Renderer::render()
 
     projection.perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
-    view.lookAt(QVector3D(4.0f, 3.0f, 3.0f),
+    view.lookAt(QVector3D(3.0f, 3.0f, 3.0f),
                  QVector3D(0.0f, 0.0f, 0.0f),
                  QVector3D(0.0f, 1.0f, 0.0f));
 
@@ -174,14 +188,16 @@ void Renderer::render()
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glClearColor(0, 0, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
 
     m_program->disableAttributeArray(0);
+    m_program->disableAttributeArray(1);
     m_program->release();
 
     m_window->resetOpenGLState();
