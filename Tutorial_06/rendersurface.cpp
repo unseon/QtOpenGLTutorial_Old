@@ -6,14 +6,25 @@
 #include <QOpenGLContext>
 #include <QImage>
 #include <qmath.h>
+#include <QThread>
 
 RenderSurface::RenderSurface()
     : m_renderer(0),
-      m_leftMouseDown(false)
+      m_leftMouseDown(false),
+      m_upKey(false),
+      m_downKey(false),
+      m_leftKey(false),
+      m_rightKey(false)
 {
     connect(this, &QQuickItem::windowChanged, this, &RenderSurface::handleWindowChanged);
 
     setAcceptedMouseButtons(Qt::AllButtons);
+
+    m_loop = new QTimer(this);
+    connect(m_loop, &QTimer::timeout, this, &RenderSurface::tick);
+    m_loop->start(33);
+
+    time.start();
 }
 
 void RenderSurface::handleWindowChanged(QQuickWindow *win)
@@ -24,6 +35,37 @@ void RenderSurface::handleWindowChanged(QQuickWindow *win)
 
         win->setClearBeforeRendering(false);
     }
+}
+
+void RenderSurface::updateWindow()
+{
+    if (window())
+        window()->update();
+}
+
+void RenderSurface::tick()
+{
+    static int counter = 0;
+    int elapsedTime = time.nsecsElapsed();
+    time.restart();
+
+    //qDebug() << "handleIdle called - " << "counter:" << counter++ << "elapsed time: " << elapsedTime;
+
+    if (m_leftKey) {
+        m_renderer->setCamRotationY(m_renderer->camRotationY() - elapsedTime / 10000000);
+        updateWindow();
+    } else if (m_rightKey){
+        m_renderer->setCamRotationY(m_renderer->camRotationY() + elapsedTime / 10000000);
+        updateWindow();
+    } else if (m_upKey) {
+        m_renderer->setCamRotationX(m_renderer->camRotationX() - elapsedTime / 10000000);
+        updateWindow();
+    } else if (m_downKey) {
+        m_renderer->setCamRotationX(m_renderer->camRotationX() + elapsedTime / 10000000);
+        updateWindow();
+    }
+
+    //QThread::usleep(16666);
 }
 
 void RenderSurface::cleanup()
@@ -55,15 +97,13 @@ void RenderSurface::mouseMoveEvent(QMouseEvent *event)
 
 
 
-        float rotX = m_originRotationX + diff.y();
-        float rotY = m_originRotationY + diff.x();
+        float rotX = m_originRotationX + diff.y() * 0.5;
+        float rotY = m_originRotationY + diff.x() * 0.5;
 
         m_renderer->setCamRotationX(rotX);
         m_renderer->setCamRotationY(rotY);
-        m_renderer->updateCamera();
 
-        if (window())
-            window()->update();
+        updateWindow();
     }
 }
 
@@ -89,11 +129,49 @@ void RenderSurface::wheelEvent(QWheelEvent *event)
 {
     qDebug() << "Wheel Event" << event->angleDelta();
     float curDist = m_renderer->camDistance();
-    m_renderer->setCamDistance(curDist + event->angleDelta().y() * 0.005);
-    m_renderer->updateCamera();
+    m_renderer->setCamDistance(curDist + event->angleDelta().y() * -0.005);
 
-    if (window())
-        window()->update();
+    updateWindow();
+}
+
+void RenderSurface::keyPressEvent(QKeyEvent *event)
+{
+    switch(event->key()) {
+    case Qt::Key_Left:
+        m_leftKey = true;
+        break;
+    case Qt::Key_Right:
+        m_rightKey = true;
+        break;
+    case Qt::Key_Up:
+        m_upKey = true;
+        break;
+    case Qt::Key_Down:
+        m_downKey = true;
+        break;
+    default:
+        break;
+    }
+}
+
+void RenderSurface::keyReleaseEvent(QKeyEvent *event)
+{
+    switch(event->key()) {
+    case Qt::Key_Left:
+        m_leftKey = false;
+        break;
+    case Qt::Key_Right:
+        m_rightKey = false;
+        break;
+    case Qt::Key_Up:
+        m_upKey = false;
+        break;
+    case Qt::Key_Down:
+        m_downKey = false;
+        break;
+    default:
+        break;
+    }
 }
 
 Renderer::Renderer()
@@ -162,6 +240,8 @@ void Renderer::setCamDistance(float value)
 void Renderer::render()
 {
     qDebug() << "render called";
+
+    updateCamera();
 
     if (!m_program) {
         m_program = new QOpenGLShaderProgram();
@@ -288,6 +368,7 @@ void Renderer::render()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
 
     glClearColor(0, 0, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

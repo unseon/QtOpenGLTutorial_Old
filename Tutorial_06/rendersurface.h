@@ -5,6 +5,9 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLFunctions>
 #include <QOpenGLTexture>
+#include <QTimer>
+#include <QTime>
+#include <QElapsedTimer>
 
 class Renderer : public QObject, protected QOpenGLFunctions
 {
@@ -59,6 +62,7 @@ public slots:
 
 private slots:
     void handleWindowChanged(QQuickWindow *win);
+    void tick();
 
 private:
     Renderer *m_renderer;
@@ -67,11 +71,23 @@ private:
     float m_originRotationX;
     float m_originRotationY;
 
+    QTimer* m_loop;
+    QElapsedTimer time;
+
+    bool m_upKey;
+    bool m_downKey;
+    bool m_leftKey;
+    bool m_rightKey;
+
+    void updateWindow();
+
 protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 };
 
 #endif // RENDERSURFACE_H
