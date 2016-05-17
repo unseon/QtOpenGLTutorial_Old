@@ -288,8 +288,30 @@ void Renderer::initializeMesh()
         0.667979f, 1.0f-0.335851f
     };
 
+
+     static unsigned int indices[] = {
+         0, 1, 2,
+         3, 4, 5,
+
+         6, 7, 8,
+         9, 10, 11,
+
+         12, 13, 14,
+         15, 16, 17,
+
+         18, 19, 20,
+         21, 22, 23,
+
+         24, 25, 26,
+         27, 28, 29,
+
+         30, 31, 32,
+         33, 34, 35
+     };
+
     m_vertexBufferData = vertices;
     m_uvBufferData = uvs;
+    m_indexBufferData = indices;
 }
 
 void Renderer::updateCamera()
@@ -341,6 +363,8 @@ void Renderer::setCamDistance(float value)
 
 void Renderer::render()
 {
+    static GLuint elementBuffer;
+
     qDebug() << "render called";
 
     updateCamera();
@@ -356,6 +380,9 @@ void Renderer::render()
 
         m_texture = new QOpenGLTexture(QImage(":/images/uvtemplate.png").mirrored());
 
+        glGenBuffers(1, &elementBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, 12 * 3 * sizeof(unsigned int), &m_indexBufferData[0], GL_STATIC_DRAW);
     }
 
     m_program->bind();
@@ -385,7 +412,9 @@ void Renderer::render()
     glClearColor(0, 0, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+
+    glDrawElements(GL_TRIANGLES, 12 * 3, GL_UNSIGNED_INT, (void*)0);
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);

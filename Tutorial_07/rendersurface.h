@@ -40,7 +40,7 @@ private:
 
     float *m_vertexBufferData;
     float *m_uvBufferData;
-
+    unsigned int * m_indexBufferData;
 
 public:
     float camRotationX();
