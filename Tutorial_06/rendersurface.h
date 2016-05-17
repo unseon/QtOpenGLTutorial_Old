@@ -35,6 +35,15 @@ private:
     float m_rotationX;
     float m_rotationY;
 
+public:
+    float camRotationX();
+    float camRotationY();
+    float camDistance();
+
+    void setCamRotationX(float value);
+    void setCamRotationY(float value);
+    void setCamDistance(float value);
+
     void updateCamera();
 };
 
@@ -55,6 +64,8 @@ private:
     Renderer *m_renderer;
     bool m_leftMouseDown;
     QPointF m_originPos;
+    float m_originRotationX;
+    float m_originRotationY;
 
 protected:
     void mouseMoveEvent(QMouseEvent *event);

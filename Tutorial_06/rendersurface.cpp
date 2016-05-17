@@ -48,6 +48,23 @@ void RenderSurface::sync()
 void RenderSurface::mouseMoveEvent(QMouseEvent *event)
 {
     qDebug() << "Mouse Move";
+
+    if (m_leftMouseDown == true) {
+        QPointF currentPos = event->localPos();
+        QPointF diff = currentPos - m_originPos;
+
+
+
+        float rotX = m_originRotationX + diff.y();
+        float rotY = m_originRotationY + diff.x();
+
+        m_renderer->setCamRotationX(rotX);
+        m_renderer->setCamRotationY(rotY);
+        m_renderer->updateCamera();
+
+        if (window())
+            window()->update();
+    }
 }
 
 void RenderSurface::mousePressEvent(QMouseEvent *event)
@@ -55,6 +72,8 @@ void RenderSurface::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         m_leftMouseDown = true;
         m_originPos = event->localPos();
+        m_originRotationX = m_renderer->camRotationX();
+        m_originRotationY = m_renderer->camRotationY();
     }
 }
 
@@ -68,7 +87,13 @@ void RenderSurface::mouseReleaseEvent(QMouseEvent *event)
 
 void RenderSurface::wheelEvent(QWheelEvent *event)
 {
-    qDebug() << "Wheel Event";
+    qDebug() << "Wheel Event" << event->angleDelta();
+    float curDist = m_renderer->camDistance();
+    m_renderer->setCamDistance(curDist + event->angleDelta().y() * 0.005);
+    m_renderer->updateCamera();
+
+    if (window())
+        window()->update();
 }
 
 Renderer::Renderer()
@@ -83,8 +108,16 @@ Renderer::Renderer()
     updateCamera();
 }
 
+Renderer::~Renderer()
+{
+}
+
 void Renderer::updateCamera()
 {
+    m_projection.setToIdentity();
+    m_view.setToIdentity();
+    m_model.setToIdentity();
+
     m_projection.perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
 
     m_view.lookAt(QVector3D(0.0f, 0.0f, m_distance),
@@ -93,16 +126,43 @@ void Renderer::updateCamera()
 
     m_view.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
     m_view.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
-
-    m_model.setToIdentity();
 }
 
-Renderer::~Renderer()
+float Renderer::camRotationX()
 {
+    return m_rotationX;
 }
+
+float Renderer::camRotationY()
+{
+    return m_rotationY;
+}
+
+float Renderer::camDistance()
+{
+    return m_distance;
+}
+
+void Renderer::setCamRotationX(float value)
+{
+    m_rotationX = value;
+}
+
+void Renderer::setCamRotationY(float value)
+{
+    m_rotationY = value;
+}
+
+void Renderer::setCamDistance(float value)
+{
+    m_distance = value;
+}
+
 
 void Renderer::render()
 {
+    qDebug() << "render called";
+
     if (!m_program) {
         m_program = new QOpenGLShaderProgram();
         m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/tutorial_05.vs");

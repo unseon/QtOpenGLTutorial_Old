@@ -5,10 +5,11 @@ import OpenGLTutorial 1.0
 Window {
     visible: true
 
-    RenderSurface {
-        width: parent.width
-        height: parent.height
+    width: 400
+    height: 400
 
+    RenderSurface {
+        anchors.fill: parent
     }
 
 //    MouseArea {
