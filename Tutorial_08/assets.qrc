@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>assets/cube.obj</file>
+    </qresource>
+</RCC>
