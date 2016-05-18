@@ -8,11 +8,7 @@ SOURCES += main.cpp \
 
 RESOURCES += qml.qrc \
     textures.qrc \
-    shaders.qrc \
-    assets.qrc
-
-INCLUDEPATH += 3rdparty/assimp/include
-LIBS += $$_PRO_FILE_PWD_/3rdparty/assimp/lib/osx/libassimp.dylib
+    shaders.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

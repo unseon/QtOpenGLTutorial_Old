@@ -8,10 +8,6 @@
 #include <qmath.h>
 #include <QThread>
 
-#include <scene.h>
-#include <postprocess.h>
-#include <Importer.hpp>
-
 RenderSurface::RenderSurface()
     : m_renderer(0),
       m_leftMouseDown(false),
