@@ -93,7 +93,7 @@ void RenderSurface::sync()
 
 void RenderSurface::mouseMoveEvent(QMouseEvent *event)
 {
-    qDebug() << "Mouse Move";
+    //qDebug() << "Mouse Move";
 
     if (m_leftMouseDown == true) {
         QPointF currentPos = event->localPos();
@@ -293,16 +293,25 @@ void Renderer::initializeMesh()
 
     Assimp::Importer importer;
 
-    QFile file("qrc:/assets/cube.obj");
+    QFile file(":/assets/cube.obj");
 
-    if (!file.open(QIODevice::ReadOnly))
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "can't open the file";
         return;
+    }
 
     QByteArray buffer = file.readAll();
 
     file.close();
 
-    const aiScene* scene = importer.ReadFileFromMemory(buffer.data_ptr(), buffer.length(), aiProcess_Triangulate);
+    qDebug() << "buffer: " << buffer;
+
+    const aiScene* scene = importer.ReadFileFromMemory(buffer.data_ptr(), buffer.length(), 0);
+//                                                       aiProcess_GenSmoothNormals      |
+//                                                       aiProcess_CalcTangentSpace       |
+//                                                       aiProcess_Triangulate       |
+//                                                       aiProcess_JoinIdenticalVertices  |
+//                                                       aiProcess_SortByPType);
 
     if( !scene)
     {
@@ -312,19 +321,47 @@ void Renderer::initializeMesh()
 
     if(scene->HasMeshes())
     {
-//        for(unsigned int ii=0; ii<scene->mNumMeshes; ++ii)
-//        {
-//            m_meshes.push_back(processMesh(scene->mMeshes[ii]));
-//        }
-
+        // load only first mesh
         aiMesh* mesh = scene->mMeshes[0];
+
+        m_sizeVertices = mesh->mNumVertices;
+        m_sizeUv = mesh->mNumVertices;
+        m_sizeIndices = mesh->mNumFaces;
+
+        qDebug() << "Mesh - vertices:" << m_sizeVertices << "uvs:" << m_sizeUv << "indices:" << m_sizeIndices;
 
         m_vertexBufferData = new float[mesh->mNumVertices * 3];
         m_uvBufferData = new float[mesh->mNumVertices * 2];
+        m_indexBufferData = new unsigned int[mesh->mNumFaces * 3];
 
         for (int i = 0; i < mesh->mNumVertices; i++) {
 
+            aiVector3D &vec = mesh->mVertices[i];
+
+            m_vertexBufferData[i * 3] = vec.x;
+            m_vertexBufferData[i * 3 + 1] = vec.y;
+            m_vertexBufferData[i * 3 + 2] = vec.z;
+
+            //qDebug() << vec.x << vec.y << vec.z;
+
+            aiVector3D uv = mesh->mTextureCoords[0][i];
+
+            m_uvBufferData[i * 2] = uv.x;
+            m_uvBufferData[i * 2 + 1] = uv.y;
+
+            qDebug() << uv.x << uv.y;
         }
+
+        for (int i = 0; i < mesh->mNumFaces; i++) {
+            aiFace face = mesh->mFaces[i];
+            m_indexBufferData[i * 3] = face.mIndices[0];
+            m_indexBufferData[i * 3 + 1] = face.mIndices[1];
+            m_indexBufferData[i * 3 + 2] = face.mIndices[2];
+
+            qDebug() << face.mIndices[0] << face.mIndices[1] << face.mIndices[2];
+        }
+
+
     }
     else
     {
@@ -382,7 +419,9 @@ void Renderer::setCamDistance(float value)
 
 void Renderer::render()
 {
-    qDebug() << "render called";
+    static GLuint elementBuffer;
+
+    //qDebug() << "render called";
 
     updateCamera();
 
@@ -397,6 +436,9 @@ void Renderer::render()
 
         m_texture = new QOpenGLTexture(QImage(":/images/uvtemplate.png").mirrored());
 
+        glGenBuffers(1, &elementBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_sizeIndices * 3 * sizeof(unsigned int), &m_indexBufferData[0], GL_STATIC_DRAW);
     }
 
     m_program->bind();
@@ -421,12 +463,14 @@ void Renderer::render()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
     glClearColor(0, 0, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLES, 0, 12 * 3);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+
+    glDrawElements(GL_TRIANGLES, m_sizeIndices * 3, GL_UNSIGNED_INT, (void*)0);
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);

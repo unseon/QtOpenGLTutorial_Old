@@ -40,7 +40,11 @@ private:
 
     float *m_vertexBufferData;
     float *m_uvBufferData;
-    float *m_indexBufferData;
+    unsigned int *m_indexBufferData;
+
+    unsigned int m_sizeVertices;
+    unsigned int m_sizeUv;
+    unsigned int m_sizeIndices;
 
 
 public:
