@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>assets/cube.obj</file>
+        <file>assets/cube.fbx</file>
     </qresource>
 </RCC>

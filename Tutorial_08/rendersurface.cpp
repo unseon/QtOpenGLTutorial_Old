@@ -7,10 +7,12 @@
 #include <QImage>
 #include <qmath.h>
 #include <QThread>
+#include <QDir>
 
-#include <scene.h>
-#include <postprocess.h>
-#include <Importer.hpp>
+#include <fbxsdk.h>
+#include <vector>
+
+using std::vector;
 
 RenderSurface::RenderSurface()
     : m_renderer(0),
@@ -196,6 +198,32 @@ Renderer::~Renderer()
 {
 }
 
+FbxString GetAttributeTypeName(FbxNodeAttribute::EType type) {
+    switch(type) {
+        case FbxNodeAttribute::eUnknown: return "unidentified";
+        case FbxNodeAttribute::eNull: return "null";
+        case FbxNodeAttribute::eMarker: return "marker";
+        case FbxNodeAttribute::eSkeleton: return "skeleton";
+        case FbxNodeAttribute::eMesh: return "mesh";
+        case FbxNodeAttribute::eNurbs: return "nurbs";
+        case FbxNodeAttribute::ePatch: return "patch";
+        case FbxNodeAttribute::eCamera: return "camera";
+        case FbxNodeAttribute::eCameraStereo: return "stereo";
+        case FbxNodeAttribute::eCameraSwitcher: return "camera switcher";
+        case FbxNodeAttribute::eLight: return "light";
+        case FbxNodeAttribute::eOpticalReference: return "optical reference";
+        case FbxNodeAttribute::eOpticalMarker: return "marker";
+        case FbxNodeAttribute::eNurbsCurve: return "nurbs curve";
+        case FbxNodeAttribute::eTrimNurbsSurface: return "trim nurbs surface";
+        case FbxNodeAttribute::eBoundary: return "boundary";
+        case FbxNodeAttribute::eNurbsSurface: return "nurbs surface";
+        case FbxNodeAttribute::eShape: return "shape";
+        case FbxNodeAttribute::eLODGroup: return "lodgroup";
+        case FbxNodeAttribute::eSubDiv: return "subdiv";
+        default: return "unknown";
+    }
+}
+
 void Renderer::initializeMesh()
 {
 //    static float vertices[] = {
@@ -291,83 +319,171 @@ void Renderer::initializeMesh()
 //    m_vertexBufferData = vertices;
 //    m_uvBufferData = uvs;
 
-    Assimp::Importer importer;
+    FbxManager* mySdkManager = NULL;
+    mySdkManager = FbxManager::Create();
 
-    QFile file(":/assets/cube.obj");
+    FbxIOSettings *ios = FbxIOSettings::Create(mySdkManager, IOSROOT);
+    mySdkManager->SetIOSettings(ios);
 
-    if (!file.open(QIODevice::ReadOnly)) {
-        qDebug() << "can't open the file";
-        return;
+    FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
+
+    const char* myImportFile = "../../cube.fbx";
+
+    QFile file("../../cube.fbx");
+
+    qDebug() << QDir::currentPath();
+    qDebug() << "exist? : " << file.exists();
+
+    if (!myImporter->Initialize(myImportFile, -1, mySdkManager->GetIOSettings())) {
+        qDebug() << "Call to FbxImporter::Initialize() failed.";
+        qDebug() << "Error returned: " << myImporter->GetStatus().GetErrorString();
     }
 
-    QByteArray buffer = file.readAll();
 
-    file.close();
+    FbxScene* lScene = FbxScene::Create(mySdkManager, "myScene");
 
-    qDebug() << "buffer: " << buffer;
+    myImporter->Import(lScene);
 
-    const aiScene* scene = importer.ReadFileFromMemory(buffer.data_ptr(), buffer.length(), 0);
-//                                                       aiProcess_GenSmoothNormals      |
-//                                                       aiProcess_CalcTangentSpace       |
-//                                                       aiProcess_Triangulate       |
-//                                                       aiProcess_JoinIdenticalVertices  |
-//                                                       aiProcess_SortByPType);
+    myImporter->Destroy();
 
-    if( !scene)
-    {
-        qDebug() << "Error loading file: (assimp:) " << importer.GetErrorString();
-        return;
-    }
+    vector<float> vertexBuffer;
+    vector<unsigned int> indexBuffer;
 
-    if(scene->HasMeshes())
-    {
-        // load only first mesh
-        aiMesh* mesh = scene->mMeshes[0];
+    FbxNode* lRootNode = lScene->GetRootNode();
+    if(lRootNode) {
+        for(int i = 0; i < lRootNode->GetChildCount(); i++) {
+            FbxNode* pNode = lRootNode->GetChild(i);
 
-        m_sizeVertices = mesh->mNumVertices;
-        m_sizeUv = mesh->mNumVertices;
-        m_sizeIndices = mesh->mNumFaces;
+            const char* nodeName = pNode->GetName();
+            FbxDouble3 translation = pNode->LclTranslation.Get();
+            FbxDouble3 rotation = pNode->LclRotation.Get();
+            FbxDouble3 scaling = pNode->LclScaling.Get();
 
-        qDebug() << "Mesh - vertices:" << m_sizeVertices << "uvs:" << m_sizeUv << "indices:" << m_sizeIndices;
+            qDebug() << "node name: " << nodeName;
+            qDebug() << "translation: " << QString("%1, %2, %3").arg(translation[0]).arg(translation[1]).arg(translation[2]);
+            qDebug() << "rotation: " << QString("%1, %2, %3").arg(rotation[0]).arg(rotation[1]).arg(rotation[2]);
+            qDebug() << "translation: " << QString("%1, %2, %3").arg(scaling[0]).arg(scaling[1]).arg(scaling[2]);
 
-        m_vertexBufferData = new float[mesh->mNumVertices * 3];
-        m_uvBufferData = new float[mesh->mNumVertices * 2];
-        m_indexBufferData = new unsigned int[mesh->mNumFaces * 3];
+            for(int i = 0; i < pNode->GetNodeAttributeCount(); i++) {
+                FbxNodeAttribute* pAttribute = pNode->GetNodeAttributeByIndex(i);
 
-        for (int i = 0; i < mesh->mNumVertices; i++) {
+                FbxString typeName = GetAttributeTypeName(pAttribute->GetAttributeType());
+                FbxString attrName = pAttribute->GetName();
 
-            aiVector3D &vec = mesh->mVertices[i];
+                qDebug()<< "type: " << typeName.Buffer() << " name: " << attrName.Buffer();
+            }
 
-            m_vertexBufferData[i * 3] = vec.x;
-            m_vertexBufferData[i * 3 + 1] = vec.y;
-            m_vertexBufferData[i * 3 + 2] = vec.z;
+            FbxMesh* pMesh = pNode->GetMesh();
 
-            //qDebug() << vec.x << vec.y << vec.z;
 
-            aiVector3D uv = mesh->mTextureCoords[0][i];
 
-            m_uvBufferData[i * 2] = uv.x;
-            m_uvBufferData[i * 2 + 1] = uv.y;
+            if (pMesh) {
+                int vertexCount = pMesh->GetControlPointsCount();
+                qDebug() << "VertexCount: " << vertexCount;
 
-            qDebug() << uv.x << uv.y;
+                FbxVector4* lControlPoints = pMesh->GetControlPoints();
+
+                for (int i = 0; i < vertexCount; i++) {
+                    qDebug() << lControlPoints[i][0] << lControlPoints[i][1] << lControlPoints[i][2];
+                }
+
+                qDebug() << "PolygonCount: " << pMesh->GetPolygonCount();
+                qDebug() << "PolygonVertexCount: " << pMesh->GetPolygonVertexCount();
+
+                int polygonCount = pMesh->GetPolygonCount();
+                int idx = 0;
+
+                for (int i = 0; i < polygonCount; i++) {
+                    int polygonSize = pMesh->GetPolygonSize(i);
+                    qDebug() << "polygonSize: " << polygonSize;
+
+                    if (polygonSize == 3) {
+                        int* polygon = pMesh->GetPolygonVertices();
+                        indexBuffer.push_back(polygon[idx]);
+                        indexBuffer.push_back(polygon[idx + 1]);
+                        indexBuffer.push_back(polygon[idx + 2]);
+                    } else if (polygonSize == 4) {
+                        int* polygon = pMesh->GetPolygonVertices();
+                        indexBuffer.push_back(polygon[idx]);
+                        indexBuffer.push_back(polygon[idx + 1]);
+                        indexBuffer.push_back(polygon[idx + 2]);
+
+                        indexBuffer.push_back(polygon[idx + 2]);
+                        indexBuffer.push_back(polygon[idx + 3]);
+                        indexBuffer.push_back(polygon[idx]);
+                    }
+
+                    idx += polygonSize;
+                }
+
+                for (int i = 0; i < pMesh->GetPolygonVertexCount(); i++) {
+                    qDebug() << "PolygonVertex: " << pMesh->GetPolygonVertices()[i];
+                }
+            }
+
+
+
         }
-
-        for (int i = 0; i < mesh->mNumFaces; i++) {
-            aiFace face = mesh->mFaces[i];
-            m_indexBufferData[i * 3] = face.mIndices[0];
-            m_indexBufferData[i * 3 + 1] = face.mIndices[1];
-            m_indexBufferData[i * 3 + 2] = face.mIndices[2];
-
-            qDebug() << face.mIndices[0] << face.mIndices[1] << face.mIndices[2];
-        }
-
-
     }
-    else
-    {
-        qDebug() << "Error: No meshes found";
-        return;
-    }
+
+
+
+
+//    if( !scene)
+//    {
+//        qDebug() << "Error loading file: (assimp:) " << importer.GetErrorString();
+//        return;
+//    }
+
+//    if(scene->HasMeshes())
+//    {
+//        // load only first mesh
+//        aiMesh* mesh = scene->mMeshes[0];
+
+//        m_sizeVertices = mesh->mNumVertices;
+//        m_sizeUv = mesh->mNumVertices;
+//        m_sizeIndices = mesh->mNumFaces;
+
+//        qDebug() << "Mesh - vertices:" << m_sizeVertices << "uvs:" << m_sizeUv << "indices:" << m_sizeIndices;
+
+//        m_vertexBufferData = new float[mesh->mNumVertices * 3];
+//        m_uvBufferData = new float[mesh->mNumVertices * 2];
+//        m_indexBufferData = new unsigned int[mesh->mNumFaces * 3];
+
+//        for (int i = 0; i < mesh->mNumVertices; i++) {
+
+//            aiVector3D &vec = mesh->mVertices[i];
+
+//            m_vertexBufferData[i * 3] = vec.x;
+//            m_vertexBufferData[i * 3 + 1] = vec.y;
+//            m_vertexBufferData[i * 3 + 2] = vec.z;
+
+//            //qDebug() << vec.x << vec.y << vec.z;
+
+//            aiVector3D uv = mesh->mTextureCoords[0][i];
+
+//            m_uvBufferData[i * 2] = uv.x;
+//            m_uvBufferData[i * 2 + 1] = uv.y;
+
+//            qDebug() << uv.x << uv.y;
+//        }
+
+//        for (int i = 0; i < mesh->mNumFaces; i++) {
+//            aiFace face = mesh->mFaces[i];
+//            m_indexBufferData[i * 3] = face.mIndices[0];
+//            m_indexBufferData[i * 3 + 1] = face.mIndices[1];
+//            m_indexBufferData[i * 3 + 2] = face.mIndices[2];
+
+//            qDebug() << face.mIndices[0] << face.mIndices[1] << face.mIndices[2];
+//        }
+
+
+//    }
+//    else
+//    {
+//        qDebug() << "Error: No meshes found";
+//        return;
+//    }
 }
 
 void Renderer::updateCamera()
