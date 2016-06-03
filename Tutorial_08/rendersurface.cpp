@@ -319,6 +319,10 @@ void Renderer::initializeMesh()
 //    m_vertexBufferData = vertices;
 //    m_uvBufferData = uvs;
 
+    QString bundlePath = QCoreApplication::applicationDirPath();
+
+    qDebug() << "bundlePath: " << bundlePath;
+
     FbxManager* mySdkManager = NULL;
     mySdkManager = FbxManager::Create();
 
@@ -346,8 +350,8 @@ void Renderer::initializeMesh()
 
     myImporter->Destroy();
 
-    vector<float> vertexBuffer;
-    vector<unsigned int> indexBuffer;
+//    vector<float> vertexBuffer;
+//    vector<unsigned int> indexBuffer;
 
     FbxNode* lRootNode = lScene->GetRootNode();
     if(lRootNode) {
@@ -385,10 +389,24 @@ void Renderer::initializeMesh()
 
                 for (int i = 0; i < vertexCount; i++) {
                     qDebug() << lControlPoints[i][0] << lControlPoints[i][1] << lControlPoints[i][2];
+
+                    m_vertices.push_back(QVector3D(lControlPoints[i][0], lControlPoints[i][1], lControlPoints[i][2]));
                 }
 
                 qDebug() << "PolygonCount: " << pMesh->GetPolygonCount();
                 qDebug() << "PolygonVertexCount: " << pMesh->GetPolygonVertexCount();
+
+
+                qDebug() << "ElementUVCount: " << pMesh->GetElementUVCount();
+
+                FbxGeometryElementUV* leUV = pMesh->GetElementUV(0);
+
+                for (int m = 0; m < leUV->GetDirectArray().GetCount(); m++) {
+                    FbxVector2 uv = leUV->GetDirectArray().GetAt(m);
+
+                    qDebug() << "UV: " << uv[0] << "," << uv[1];
+                }
+
 
                 int polygonCount = pMesh->GetPolygonCount();
                 int idx = 0;
@@ -399,18 +417,18 @@ void Renderer::initializeMesh()
 
                     if (polygonSize == 3) {
                         int* polygon = pMesh->GetPolygonVertices();
-                        indexBuffer.push_back(polygon[idx]);
-                        indexBuffer.push_back(polygon[idx + 1]);
-                        indexBuffer.push_back(polygon[idx + 2]);
+                        m_indices.push_back(polygon[idx]);
+                        m_indices.push_back(polygon[idx + 1]);
+                        m_indices.push_back(polygon[idx + 2]);
                     } else if (polygonSize == 4) {
                         int* polygon = pMesh->GetPolygonVertices();
-                        indexBuffer.push_back(polygon[idx]);
-                        indexBuffer.push_back(polygon[idx + 1]);
-                        indexBuffer.push_back(polygon[idx + 2]);
+                        m_indices.push_back(polygon[idx]);
+                        m_indices.push_back(polygon[idx + 1]);
+                        m_indices.push_back(polygon[idx + 2]);
 
-                        indexBuffer.push_back(polygon[idx + 2]);
-                        indexBuffer.push_back(polygon[idx + 3]);
-                        indexBuffer.push_back(polygon[idx]);
+                        m_indices.push_back(polygon[idx + 2]);
+                        m_indices.push_back(polygon[idx + 3]);
+                        m_indices.push_back(polygon[idx]);
                     }
 
                     idx += polygonSize;
@@ -419,71 +437,11 @@ void Renderer::initializeMesh()
                 for (int i = 0; i < pMesh->GetPolygonVertexCount(); i++) {
                     qDebug() << "PolygonVertex: " << pMesh->GetPolygonVertices()[i];
                 }
+
+                return;
             }
-
-
-
         }
     }
-
-
-
-
-//    if( !scene)
-//    {
-//        qDebug() << "Error loading file: (assimp:) " << importer.GetErrorString();
-//        return;
-//    }
-
-//    if(scene->HasMeshes())
-//    {
-//        // load only first mesh
-//        aiMesh* mesh = scene->mMeshes[0];
-
-//        m_sizeVertices = mesh->mNumVertices;
-//        m_sizeUv = mesh->mNumVertices;
-//        m_sizeIndices = mesh->mNumFaces;
-
-//        qDebug() << "Mesh - vertices:" << m_sizeVertices << "uvs:" << m_sizeUv << "indices:" << m_sizeIndices;
-
-//        m_vertexBufferData = new float[mesh->mNumVertices * 3];
-//        m_uvBufferData = new float[mesh->mNumVertices * 2];
-//        m_indexBufferData = new unsigned int[mesh->mNumFaces * 3];
-
-//        for (int i = 0; i < mesh->mNumVertices; i++) {
-
-//            aiVector3D &vec = mesh->mVertices[i];
-
-//            m_vertexBufferData[i * 3] = vec.x;
-//            m_vertexBufferData[i * 3 + 1] = vec.y;
-//            m_vertexBufferData[i * 3 + 2] = vec.z;
-
-//            //qDebug() << vec.x << vec.y << vec.z;
-
-//            aiVector3D uv = mesh->mTextureCoords[0][i];
-
-//            m_uvBufferData[i * 2] = uv.x;
-//            m_uvBufferData[i * 2 + 1] = uv.y;
-
-//            qDebug() << uv.x << uv.y;
-//        }
-
-//        for (int i = 0; i < mesh->mNumFaces; i++) {
-//            aiFace face = mesh->mFaces[i];
-//            m_indexBufferData[i * 3] = face.mIndices[0];
-//            m_indexBufferData[i * 3 + 1] = face.mIndices[1];
-//            m_indexBufferData[i * 3 + 2] = face.mIndices[2];
-
-//            qDebug() << face.mIndices[0] << face.mIndices[1] << face.mIndices[2];
-//        }
-
-
-//    }
-//    else
-//    {
-//        qDebug() << "Error: No meshes found";
-//        return;
-//    }
 }
 
 void Renderer::updateCamera()
