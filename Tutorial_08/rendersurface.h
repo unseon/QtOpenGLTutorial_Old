@@ -46,11 +46,6 @@ private:
     float *m_uvBufferData;
     unsigned int *m_indexBufferData;
 
-    std::vector<QVector3D> m_vertices;
-    std::vector<QVector2D> m_uvs;
-    std::vector<QVector3D> m_normals;
-    std::vector<unsigned int> m_indices;
-
     unsigned int m_sizeVertices;
     unsigned int m_sizeUv;
     unsigned int m_sizeIndices;
@@ -58,6 +53,8 @@ private:
     vector<float> m_vertices;
     vector<float> m_uvs;
     vector<unsigned int> m_indices;
+
+    QString m_textureFile;
 
 public:
     float camRotationX();
