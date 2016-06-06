@@ -319,10 +319,6 @@ void Renderer::initializeMesh()
 //    m_vertexBufferData = vertices;
 //    m_uvBufferData = uvs;
 
-    QString bundlePath = QCoreApplication::applicationDirPath();
-
-    qDebug() << "bundlePath: " << bundlePath;
-
     FbxManager* mySdkManager = NULL;
     mySdkManager = FbxManager::Create();
 
@@ -350,9 +346,6 @@ void Renderer::initializeMesh()
 
     myImporter->Destroy();
 
-//    vector<float> vertexBuffer;
-//    vector<unsigned int> indexBuffer;
-
     FbxNode* lRootNode = lScene->GetRootNode();
     if(lRootNode) {
         for(int i = 0; i < lRootNode->GetChildCount(); i++) {
@@ -379,40 +372,40 @@ void Renderer::initializeMesh()
 
             FbxMesh* pMesh = pNode->GetMesh();
 
-
-
             if (pMesh) {
-                int vertexCount = pMesh->GetControlPointsCount();
-                qDebug() << "VertexCount: " << vertexCount;
-
-                FbxVector4* lControlPoints = pMesh->GetControlPoints();
-
-                for (int i = 0; i < vertexCount; i++) {
-                    qDebug() << lControlPoints[i][0] << lControlPoints[i][1] << lControlPoints[i][2];
-
-                    m_vertices.push_back(QVector3D(lControlPoints[i][0], lControlPoints[i][1], lControlPoints[i][2]));
-                }
-
                 qDebug() << "PolygonCount: " << pMesh->GetPolygonCount();
-                qDebug() << "PolygonVertexCount: " << pMesh->GetPolygonVertexCount();
-
-
-                qDebug() << "ElementUVCount: " << pMesh->GetElementUVCount();
-
+                int polygonCount = pMesh->GetPolygonCount();
                 FbxGeometryElementUV* leUV = pMesh->GetElementUV(0);
 
-                for (int m = 0; m < leUV->GetDirectArray().GetCount(); m++) {
-                    FbxVector2 uv = leUV->GetDirectArray().GetAt(m);
+                for (int i = 0; i < polygonCount; i++) {
 
-                    qDebug() << "UV: " << uv[0] << "," << uv[1];
+                    int polygonSize = pMesh->GetPolygonSize(i);
+
+                    for (int j = 0; j < polygonSize; j++) {
+                        int lControlPointIndex = pMesh->GetPolygonVertex(i, j);
+                        FbxVector4 vert = pMesh->GetControlPoints()[lControlPointIndex];
+
+                        qDebug() << "vertex: " << vert[0] << vert[1] << vert[2];
+                        m_vertices.push_back(vert[0]);
+                        m_vertices.push_back(vert[1]);
+                        m_vertices.push_back(vert[2]);
+
+                        int lTextureUVIndex = pMesh->GetTextureUVIndex(i, j);
+                        FbxVector2 uv = leUV->GetDirectArray().GetAt(lTextureUVIndex);
+
+                        qDebug() << "uv: " << uv[0] << uv[1];
+                        m_uvs.push_back(uv[0]);
+                        m_uvs.push_back(uv[1]);
+                    }
                 }
 
 
-                int polygonCount = pMesh->GetPolygonCount();
                 int idx = 0;
 
                 for (int i = 0; i < polygonCount; i++) {
+
                     int polygonSize = pMesh->GetPolygonSize(i);
+
                     qDebug() << "polygonSize: " << polygonSize;
 
                     if (polygonSize == 3) {
@@ -422,23 +415,18 @@ void Renderer::initializeMesh()
                         m_indices.push_back(polygon[idx + 2]);
                     } else if (polygonSize == 4) {
                         int* polygon = pMesh->GetPolygonVertices();
-                        m_indices.push_back(polygon[idx]);
-                        m_indices.push_back(polygon[idx + 1]);
-                        m_indices.push_back(polygon[idx + 2]);
 
-                        m_indices.push_back(polygon[idx + 2]);
-                        m_indices.push_back(polygon[idx + 3]);
-                        m_indices.push_back(polygon[idx]);
+                        m_indices.push_back(idx);
+                        m_indices.push_back(idx + 1);
+                        m_indices.push_back(idx + 2);
+
+                        m_indices.push_back(idx + 2);
+                        m_indices.push_back(idx + 3);
+                        m_indices.push_back(idx);
                     }
 
                     idx += polygonSize;
                 }
-
-                for (int i = 0; i < pMesh->GetPolygonVertexCount(); i++) {
-                    qDebug() << "PolygonVertex: " << pMesh->GetPolygonVertices()[i];
-                }
-
-                return;
             }
         }
     }
@@ -510,9 +498,10 @@ void Renderer::render()
 
         m_texture = new QOpenGLTexture(QImage(":/images/uvtemplate.png").mirrored());
 
+        qDebug() << "glBufferData: " << m_indices.size() * 3;
         glGenBuffers(1, &elementBuffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_sizeIndices * 3 * sizeof(unsigned int), &m_indexBufferData[0], GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), m_indices.data(), GL_STATIC_DRAW);
     }
 
     m_program->bind();
@@ -527,8 +516,8 @@ void Renderer::render()
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
 
-    m_program->setAttributeArray(0, GL_FLOAT, m_vertexBufferData, 3);
-    m_program->setAttributeArray(1, GL_FLOAT, m_uvBufferData, 2);
+    m_program->setAttributeArray(0, GL_FLOAT, &m_vertices[0], 3);
+    m_program->setAttributeArray(1, GL_FLOAT, &m_uvs[0], 2);
 
     QMatrix4x4 mvp = m_projection * m_view * m_model;
     m_program->setUniformValue("MVP", mvp);
@@ -537,14 +526,14 @@ void Renderer::render()
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //glEnable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
 
     glClearColor(0, 0, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 
-    glDrawElements(GL_TRIANGLES, m_sizeIndices * 3, GL_UNSIGNED_INT, (void*)0);
+    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);

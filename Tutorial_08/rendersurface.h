@@ -9,6 +9,10 @@
 #include <QTime>
 #include <QElapsedTimer>
 
+#include <vector>
+
+using std::vector;
+
 class Renderer : public QObject, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -51,6 +55,9 @@ private:
     unsigned int m_sizeUv;
     unsigned int m_sizeIndices;
 
+    vector<float> m_vertices;
+    vector<float> m_uvs;
+    vector<unsigned int> m_indices;
 
 public:
     float camRotationX();
