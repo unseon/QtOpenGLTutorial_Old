@@ -22,8 +22,9 @@ HEADERS += \
 
 DISTFILES +=
 
-app_launch_images.files += $$PWD/assets/cube.fbx
-app_launch_images.files += $$PWD/uvtemplate.png
+app_launch_images.files += $$PWD/assets/monkey.fbx
+app_launch_images.files += $$PWD/images/house01_org.png
+
 QMAKE_BUNDLE_DATA += app_launch_images
 
 macx: LIBS += -L$$PWD/3rdparty/fbxsdk/lib/clang/release/ -lfbxsdk

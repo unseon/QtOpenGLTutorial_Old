@@ -236,7 +236,7 @@ void Renderer::initializeMesh()
 
     const char* myImportFile = "../../cube.fbx";
 
-    QFile file("../../cube.fbx");
+    QFile file("../../monkey.fbx");
 
     qDebug() << QDir::currentPath();
     qDebug() << "exist? : " << file.exists();
