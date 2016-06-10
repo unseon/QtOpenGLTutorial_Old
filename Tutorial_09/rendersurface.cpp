@@ -234,9 +234,9 @@ void Renderer::initializeMesh()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    const char* myImportFile = "../../cube.fbx";
+    const char* myImportFile = "../../monkey.fbx";
 
-    QFile file("../../monkey.fbx");
+    QFile file(myImportFile);
 
     qDebug() << QDir::currentPath();
     qDebug() << "exist? : " << file.exists();
