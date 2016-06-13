@@ -486,15 +486,14 @@ void Renderer::render()
     QMatrix4x4 mv = m_view * m_model;
     QMatrix4x4 normalMatrix = mv.transposed().inverted();
 
-    QVector3D light_dir_world(1, -1, -1);
+    QVector4D light_dir_world(1, -1, -1, 0);
     light_dir_world.normalize();
-    //QVector3D light_dir_view = normalMatrix * light_dir_world;
-    //light_dir_view.normalize();
-    //qDebug() << light_dir_view;
+    QVector4D light_dir_view = (normalMatrix * light_dir_world);
+    qDebug() << light_dir_view;
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("NormalMatrix", normalMatrix);
-    m_program->setUniformValue("lightDirection", light_dir_world);
+    m_program->setUniformValue("light.direction", light_dir_view);
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
