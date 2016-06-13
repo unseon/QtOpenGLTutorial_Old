@@ -515,7 +515,7 @@ void Renderer::render()
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    glDepthFunc(GL_ALWAYS);
     //glEnable(GL_CULL_FACE);
 
     glClearColor(0, 0, 1, 1);
