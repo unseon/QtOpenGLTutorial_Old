@@ -491,9 +491,24 @@ void Renderer::render()
     QVector4D light_dir_view = (normalMatrix * light_dir_world);
     qDebug() << light_dir_view;
 
+    QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
+    QVector4D lightAmbientColor(0.3f, 0.0f, 0.0f, 1.0f);
+    QVector4D lightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
+    QVector4D lightSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
+    float materalShininess = 3.0f;
+
     m_program->setUniformValue("MVP", mvp);
+    m_program->setUniformValue("MV", mv);
     m_program->setUniformValue("NormalMatrix", normalMatrix);
+
+    m_program->setUniformValue("light.ambient", lightAmbientColor);
+    m_program->setUniformValue("light.diffuse", lightDiffuseColor);
+    m_program->setUniformValue("light.specular", lightSpecularColor);
+    m_program->setUniformValue("material.shininess", materalShininess);
+
     m_program->setUniformValue("light.direction", light_dir_view);
+
+    m_program->setUniformValue("scene.backgroundColor", sceneBackgroundColor);
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
