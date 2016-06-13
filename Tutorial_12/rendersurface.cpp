@@ -191,8 +191,8 @@ void RenderSurface::keyReleaseEvent(QKeyEvent *event)
 Renderer::Renderer()
     : m_program(0),
       m_texture(0),
-      m_rotationX(45.0f),
-      m_rotationY(45.0f),
+      m_rotationX(0.0f),
+      m_rotationY(0.0f),
       m_distance(10.0f)
 {
     initializeOpenGLFunctions();
@@ -328,6 +328,18 @@ void Renderer::initializeMesh()
             m_normals.push_back(normal[1]);
             m_normals.push_back(normal[2]);
 
+            FbxVector4 tangent = pMesh->GetElementTangent(0)->GetDirectArray().GetAt(vertexId);
+            qDebug() << "idx: " << lControlPointIndex <<"tangent: " << tangent[0] << tangent[1] << tangent[2];
+            m_tangents.push_back(tangent[0]);
+            m_tangents.push_back(tangent[1]);
+            m_tangents.push_back(tangent[2]);
+
+            FbxVector4 bitangent = pMesh->GetElementBinormal(0)->GetDirectArray().GetAt(vertexId);
+            qDebug() << "idx: " << lControlPointIndex <<"bitangent: " << bitangent[0] << bitangent[1] << bitangent[2];
+            m_bitangents.push_back(bitangent[0]);
+            m_bitangents.push_back(bitangent[1]);
+            m_bitangents.push_back(bitangent[2]);
+
             vertexId++;
         }
     }
@@ -456,8 +468,8 @@ void Renderer::render()
 
     if (!m_program) {
         m_program = new QOpenGLShaderProgram();
-        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_03.vs");
-        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading_03.fs");
+        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_04.vs");
+        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading_04.fs");
 
         m_program->bindAttributeLocation("vertices", 0);
         m_program->bindAttributeLocation("texCoord", 1);
@@ -497,14 +509,14 @@ void Renderer::render()
     QVector4D light_dir_world(1, -1, -1, 0);
     light_dir_world.normalize();
     QVector4D light_dir_view = (normalMatrix * light_dir_world);
-    qDebug() << light_dir_view;
+    //qDebug() << light_dir_view;
 
     QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-    QVector4D lightAmbientColor(0.3f, 0.0f, 0.0f, 1.0f);
+    QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
     QVector4D lightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
-    QVector4D lightSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
-    float materialShininess = 3.0f;
-    float materialOpacity = 0.3f;
+    QVector4D lightSpecularColor(0.8f, 0.8f, 0.8f, 1.0f);
+    float materialShininess = 2.0f;
+    float materialOpacity = 1.0f;
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);
@@ -523,7 +535,7 @@ void Renderer::render()
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_ALWAYS);
+    glDepthFunc(GL_LESS);
     //glEnable(GL_CULL_FACE);
 
     glClearColor(0, 0, 1, 1);

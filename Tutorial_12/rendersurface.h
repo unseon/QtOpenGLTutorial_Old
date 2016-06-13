@@ -54,6 +54,8 @@ private:
     vector<float> m_uvs;
     vector<unsigned int> m_indices;
     vector<float> m_normals;
+    vector<float> m_tangents;
+    vector<float> m_bitangents;
 
     QString m_textureFile;
 
