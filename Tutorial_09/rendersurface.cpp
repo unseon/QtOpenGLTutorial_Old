@@ -502,7 +502,7 @@ void Renderer::render()
     m_program->setUniformValue("NormalMatrix", normalMatrix);
 
     m_program->setUniformValue("light.ambient", lightAmbientColor);
-    m_program->setUniformValue("light.diffuse", lightDiffuseColor);
+    //m_program->setUniformValue("light.diffuse", lightDiffuseColor);
     m_program->setUniformValue("light.specular", lightSpecularColor);
     m_program->setUniformValue("material.shininess", materalShininess);
 

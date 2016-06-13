@@ -9,7 +9,7 @@ struct Light {
 struct Material {
     vec4 emission;
     vec4 ambient;
-    vec4 diffuse;
+//    vec4 diffuse;
     vec4 specular;
     float shininess;
 };
@@ -43,9 +43,6 @@ void main() {
     vec4 Ispec = light.specular
                 * pow(max(dot(R,E),0.0), material.shininess);
     Ispec = clamp(Ispec, 0.0, 1.0);
-
-    //float cosTheta = clamp(dot(-light.direction.xyz, fragNormal.xyz), 0.0, 1.0);
-    //gl_FragColor = vec4(texture2D(texture, texc).xyz * cosTheta, 1);
 
     gl_FragColor = scene.backgroundColor + Iamb + Idiff + Ispec;
 }
