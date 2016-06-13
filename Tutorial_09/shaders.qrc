@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>shaders/basic_shading.vs</file>
         <file>shaders/basic_shading.fs</file>
+        <file>shaders/basic_shading_02.vs</file>
+        <file>shaders/basic_shading_02.fs</file>
     </qresource>
 </RCC>

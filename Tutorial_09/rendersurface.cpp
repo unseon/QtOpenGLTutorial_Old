@@ -448,8 +448,8 @@ void Renderer::render()
 
     if (!m_program) {
         m_program = new QOpenGLShaderProgram();
-        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading.vs");
-        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading.fs");
+        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_02.vs");
+        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading_02.fs");
 
         m_program->bindAttributeLocation("vertices", 0);
         m_program->bindAttributeLocation("texCoord", 1);
@@ -485,8 +485,16 @@ void Renderer::render()
     QMatrix4x4 mvp = m_projection * m_view * m_model;
     QMatrix4x4 mv = m_view * m_model;
     QMatrix4x4 normalMatrix = mv.transposed().inverted();
+
+    QVector3D light_dir_world(1, -1, -1);
+    light_dir_world.normalize();
+    //QVector3D light_dir_view = normalMatrix * light_dir_world;
+    //light_dir_view.normalize();
+    //qDebug() << light_dir_view;
+
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("NormalMatrix", normalMatrix);
+    m_program->setUniformValue("lightDirection", light_dir_world);
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
