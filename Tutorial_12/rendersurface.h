@@ -33,6 +33,7 @@ private:
     QQuickWindow *m_window;
     QOpenGLShaderProgram *m_program;
     QOpenGLTexture *m_texture;
+    QOpenGLTexture *m_normalmap;
 
     QMatrix4x4 m_projection;
     QMatrix4x4 m_view;
@@ -58,6 +59,7 @@ private:
     vector<float> m_bitangents;
 
     QString m_textureFile;
+    QString m_normalmapFile;
 
 public:
     float camRotationX();

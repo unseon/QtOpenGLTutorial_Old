@@ -242,7 +242,8 @@ void Renderer::initializeMesh()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    const char* myImportFile = "../../monkey.fbx";
+    //const char* myImportFile = "../../monkey.fbx";
+    const char* myImportFile = "../../cube.fbx";
 
     QFile file(myImportFile);
 
@@ -399,7 +400,7 @@ void Renderer::initializeMesh()
     // build texture info
     FbxSurfaceMaterial *lMaterial = pMesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(0);
 
-
+    qDebug() << FbxLayerElement::sTextureChannelNames[0];
     FbxProperty lProperty = lMaterial->FindProperty(FbxLayerElement::sTextureChannelNames[0]);
     FbxTexture* lTexture = lProperty.GetSrcObject<FbxTexture>(0);
     FbxFileTexture *lFileTexture = FbxCast<FbxFileTexture>(lTexture);
@@ -407,6 +408,16 @@ void Renderer::initializeMesh()
     if (lFileTexture) {
         qDebug() << "texture file: " << (char *) lFileTexture->GetFileName();
         m_textureFile = (char *) lFileTexture->GetFileName();
+    }
+
+    qDebug() << FbxLayerElement::sTextureChannelNames[9];
+    FbxProperty lProperty2 = lMaterial->FindProperty(FbxLayerElement::sTextureChannelNames[9]);
+    FbxTexture* lTexture2 = lProperty2.GetSrcObject<FbxTexture>(0);
+    FbxFileTexture *lFileTexture2 = FbxCast<FbxFileTexture>(lTexture2);
+
+    if (lFileTexture2) {
+        qDebug() << "normalmap file: " << (char *) lFileTexture2->GetFileName();
+        m_normalmapFile = (char *) lFileTexture2->GetFileName();
     }
 
 }
@@ -423,8 +434,8 @@ void Renderer::updateCamera()
                  QVector3D(0.0f, 0.0f, 0.0f),
                  QVector3D(0.0f, 1.0f, 0.0f));
 
-    m_view.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
-    m_view.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
+    m_model.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
+    m_model.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
 }
 
 float Renderer::camRotationX()
@@ -474,10 +485,13 @@ void Renderer::render()
         m_program->bindAttributeLocation("vertices", 0);
         m_program->bindAttributeLocation("texCoord", 1);
         m_program->bindAttributeLocation("normals", 2);
+        m_program->bindAttributeLocation("tangents", 3);
+        m_program->bindAttributeLocation("bitangents", 4);
         m_program->link();
 
         //m_texture = new QOpenGLTexture(QImage(":/images/uvtemplate.png").mirrored());
         m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
+        m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
 
         qDebug() << "glBufferData: " << m_indices.size() * 3;
         glGenBuffers(1, &elementBuffer);
@@ -488,8 +502,10 @@ void Renderer::render()
     m_program->bind();
 
     m_program->setUniformValue("texture", 0);
+    m_texture->bind(0);
 
-    m_texture->bind();
+    m_program->setUniformValue("normalmap", 1);
+    m_normalmap->bind(1);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -497,16 +513,20 @@ void Renderer::render()
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
     m_program->enableAttributeArray(2);
+    m_program->enableAttributeArray(3);
+    m_program->enableAttributeArray(4);
 
     m_program->setAttributeArray(0, GL_FLOAT, &m_vertices[0], 3);
     m_program->setAttributeArray(1, GL_FLOAT, &m_uvs[0], 2);
     m_program->setAttributeArray(2, GL_FLOAT, &m_normals[0], 3);
+    m_program->setAttributeArray(3, GL_FLOAT, &m_tangents[0], 3);
+    m_program->setAttributeArray(4, GL_FLOAT, &m_bitangents[0], 3);
 
     QMatrix4x4 mvp = m_projection * m_view * m_model;
     QMatrix4x4 mv = m_view * m_model;
     QMatrix4x4 normalMatrix = mv.transposed().inverted();
 
-    QVector4D light_dir_world(1, -1, -1, 0);
+    QVector4D light_dir_world(0, -1, 0, 0);
     light_dir_world.normalize();
     QVector4D light_dir_view = (normalMatrix * light_dir_world);
     //qDebug() << light_dir_view;
@@ -515,7 +535,7 @@ void Renderer::render()
     QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
     QVector4D lightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
     QVector4D lightSpecularColor(0.8f, 0.8f, 0.8f, 1.0f);
-    float materialShininess = 2.0f;
+    float materialShininess = 0.5f;
     float materialOpacity = 1.0f;
 
     m_program->setUniformValue("MVP", mvp);
