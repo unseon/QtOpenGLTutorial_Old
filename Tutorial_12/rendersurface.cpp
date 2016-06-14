@@ -242,8 +242,8 @@ void Renderer::initializeMesh()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    //const char* myImportFile = "../../monkey.fbx";
-    const char* myImportFile = "../../cube.fbx";
+    const char* myImportFile = "../../monkey.fbx";
+    //const char* myImportFile = "../../cube.fbx";
 
     QFile file(myImportFile);
 
@@ -528,10 +528,16 @@ void Renderer::render()
     QMatrix4x4 lightNormalMatrix = m_view.transposed().inverted();
 
     QVector4D light_position_world(10, 10, -10, 0);
-    QVector4D light_dir_world(1, -1, -1, 0);
+    QVector4D light_dir_world(0, 0, -1, 0);
+
     light_dir_world.normalize();
     QVector4D light_dir_view = light_dir_world * lightNormalMatrix;
     //qDebug() << light_dir_view;
+
+    QVector4D normal(0, -1, 0, 0);
+    QVector4D normal_view = normal * normalMatrix;
+
+    //qDebug() << QVector4D::dotProduct(normal_view, light_dir_view);
 
     QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
     QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -569,6 +575,7 @@ void Renderer::render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);

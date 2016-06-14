@@ -67,6 +67,8 @@ void main() {
     vec3 TangentE = normalize(TBN * E);
 
     float cosTheta = clamp(dot(TangentN, TangentL), 0.0, 1.0);
+    float cosTheta1 = clamp(dot(fragNormal.xyz, L), 0.0, 1.0);
+
     vec3 TangentR = -reflect(TangentL, TangentN);
 
     float cosAlpha = clamp(dot(TangentE, TangentR), 0.0, 1.0);
@@ -76,8 +78,10 @@ void main() {
     //vec4 Iamb = 0.5 * (light.ambient + textureColor * length(light.ambient) * 0.333);
     vec4 Iamb = vec4(0.0, 0.0, 0.0, 0.0);
 
-    //vec4 Idiff = textureColor * cosTheta;
-    vec4 Idiff = vec4(1.0, 1.0, 1.0, 1.0) * cosTheta;
+    vec4 Idiff = textureColor * cosTheta;
+    //vec4 Idiff = vec4(0.0, 0.0, 1.0, 1.0) * cosTheta;
+    //vec4 Idiff = vec4(0.0, 0.0, 1.0, 1.0) * clamp(dot(fragTangent.xyz, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
+
     Idiff = clamp(Idiff, 0.0, 1.0);
 
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);

@@ -25,6 +25,7 @@ DISTFILES +=
 app_launch_images.files += $$PWD/assets/monkey.fbx
 app_launch_images.files += $$PWD/assets/cube.fbx
 app_launch_images.files += $$PWD/images/house01_org.png
+app_launch_images.files += $$PWD/images/uvtemplate.png
 
 QMAKE_BUNDLE_DATA += app_launch_images
 

@@ -20,5 +20,5 @@ void main() {
     texc = texCoord;
     fragVertex = MV * vertices;
     fragTangent = NormalMatrix * tangents;
-    fragBitangent = NormalMatrix * tangents;
+    fragBitangent = NormalMatrix * bitangents;
 }
