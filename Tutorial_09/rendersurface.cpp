@@ -234,7 +234,8 @@ void Renderer::initializeMesh()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    const char* myImportFile = "../../monkey.fbx";
+    //const char* myImportFile = "../../monkey.fbx";
+    const char* myImportFile = "../../cube.fbx";
 
     QFile file(myImportFile);
 
@@ -403,8 +404,8 @@ void Renderer::updateCamera()
                  QVector3D(0.0f, 0.0f, 0.0f),
                  QVector3D(0.0f, 1.0f, 0.0f));
 
-    m_view.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
-    m_view.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
+    m_model.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
+    m_model.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
 }
 
 float Renderer::camRotationX()
@@ -485,14 +486,17 @@ void Renderer::render()
     QMatrix4x4 mvp = m_projection * m_view * m_model;
     QMatrix4x4 mv = m_view * m_model;
     QMatrix4x4 normalMatrix = mv.transposed().inverted();
+    QMatrix4x4 lightNormalMatrix = m_view.transposed().inverted();
 
     QVector4D light_dir_world(1, -1, -1, 0);
     light_dir_world.normalize();
-    QVector4D light_dir_view = (normalMatrix * light_dir_world);
-    qDebug() << light_dir_view;
+    qDebug() << "light_dir_world: " << light_dir_world;
+    QVector4D light_dir_view = light_dir_world * lightNormalMatrix;
+    qDebug() << "light_dir_view: " << light_dir_view;
+
 
     QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-    QVector4D lightAmbientColor(0.3f, 0.0f, 0.0f, 1.0f);
+    QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
     QVector4D lightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
     QVector4D lightSpecularColor(1.0f, 1.0f, 1.0f, 1.0f);
     float materalShininess = 3.0f;

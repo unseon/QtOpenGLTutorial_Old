@@ -40,9 +40,10 @@ void main() {
     vec4 Idiff = texture2D(texture, texc) * max(dot(fragNormal.xyz,L), 0.0);
     Idiff = clamp(Idiff, 0.0, 1.0);
 
-    vec4 Ispec = light.specular
-                * pow(max(dot(R,E),0.0), material.shininess);
-    Ispec = clamp(Ispec, 0.0, 1.0);
+//    vec4 Ispec = light.specular
+//                * pow(max(dot(R,E),0.0), material.shininess);
+//    Ispec = clamp(Ispec, 0.0, 1.0);
 
-    gl_FragColor = scene.backgroundColor + Iamb + Idiff + Ispec;
+//    gl_FragColor = scene.backgroundColor + Iamb + Idiff + Ispec;
+    gl_FragColor = scene.backgroundColor + Iamb + Idiff;
 }

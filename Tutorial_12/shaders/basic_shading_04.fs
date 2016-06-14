@@ -53,7 +53,6 @@ highp mat3 transpose(in highp mat3 inMatrix) {
 void main() {
     vec3 L = -light.direction.xyz;
     vec3 E = normalize(-fragVertex).xyz;
-    vec3 R = normalize(-reflect(L, fragNormal.xyz)).xyz;
 
 
     vec3 TangentN = normalize(texture2D( normalmap, texc).rgb * 2.0 - 1.0);

@@ -191,8 +191,8 @@ void RenderSurface::keyReleaseEvent(QKeyEvent *event)
 Renderer::Renderer()
     : m_program(0),
       m_texture(0),
-      m_rotationX(0.0f),
-      m_rotationY(0.0f),
+      m_rotationX(45.0f),
+      m_rotationY(45.0f),
       m_distance(10.0f)
 {
     initializeOpenGLFunctions();
@@ -525,10 +525,12 @@ void Renderer::render()
     QMatrix4x4 mvp = m_projection * m_view * m_model;
     QMatrix4x4 mv = m_view * m_model;
     QMatrix4x4 normalMatrix = mv.transposed().inverted();
+    QMatrix4x4 lightNormalMatrix = m_view.transposed().inverted();
 
-    QVector4D light_dir_world(0, -1, 0, 0);
+    QVector4D light_position_world(10, 10, -10, 0);
+    QVector4D light_dir_world(1, -1, -1, 0);
     light_dir_world.normalize();
-    QVector4D light_dir_view = (normalMatrix * light_dir_world);
+    QVector4D light_dir_view = light_dir_world * lightNormalMatrix;
     //qDebug() << light_dir_view;
 
     QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
