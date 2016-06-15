@@ -51,7 +51,7 @@ highp mat3 transpose(in highp mat3 inMatrix) {
 }
 
 void main() {
-    vec3 L = -light.direction.xyz;
+    vec3 L = light.direction.xyz;
     vec3 E = normalize(-fragVertex).xyz;
 
 
@@ -65,11 +65,13 @@ void main() {
 
     vec3 TangentL = normalize(TBN * L);
     vec3 TangentE = normalize(TBN * E);
+    vec3 TangentN1 = normalize(TBN * fragNormal.xyz);
 
-    float cosTheta = clamp(dot(TangentN, TangentL), 0.0, 1.0);
-    float cosTheta1 = clamp(dot(fragNormal.xyz, L), 0.0, 1.0);
+    float cosTheta = clamp(dot(TangentN, -TangentL), 0.0, 1.0);
+    float cosTheta1 = clamp(dot(fragNormal.xyz, -L), 0.0, 1.0);
+    float cosTheta2 = clamp(dot(TangentN1, -TangentL), 0.0, 1.0);
 
-    vec3 TangentR = -reflect(TangentL, TangentN);
+    vec3 TangentR = reflect(TangentL, TangentN);
 
     float cosAlpha = clamp(dot(TangentE, TangentR), 0.0, 1.0);
 

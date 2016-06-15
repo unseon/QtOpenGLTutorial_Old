@@ -16,9 +16,11 @@ uniform mat4 NormalMatrix;
 
 void main() {
     gl_Position = MVP * vertices;
-    fragNormal = NormalMatrix * normals;
+
     texc = texCoord;
     fragVertex = MV * vertices;
+
+    fragNormal = NormalMatrix * normals;
     fragTangent = NormalMatrix * tangents;
     fragBitangent = NormalMatrix * bitangents;
 }

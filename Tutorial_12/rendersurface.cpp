@@ -31,7 +31,7 @@ RenderSurface::RenderSurface()
 
     m_loop = new QTimer(this);
     connect(m_loop, &QTimer::timeout, this, &RenderSurface::tick);
-    m_loop->start(33);
+    //m_loop->start(33);
 
     time.start();
 }
@@ -242,8 +242,8 @@ void Renderer::initializeMesh()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    const char* myImportFile = "../../monkey.fbx";
-    //const char* myImportFile = "../../cube.fbx";
+    //const char* myImportFile = "../../monkey.fbx";
+    const char* myImportFile = "../../cube.fbx";
 
     QFile file(myImportFile);
 
@@ -524,8 +524,8 @@ void Renderer::render()
 
     QMatrix4x4 mvp = m_projection * m_view * m_model;
     QMatrix4x4 mv = m_view * m_model;
-    QMatrix4x4 normalMatrix = mv.transposed().inverted();
-    QMatrix4x4 lightNormalMatrix = m_view.transposed().inverted();
+    QMatrix4x4 normalMatrix = mv.inverted().transposed();
+    QMatrix4x4 lightNormalMatrix = m_view.inverted().transposed();
 
     QVector4D light_position_world(10, 10, -10, 0);
     QVector4D light_dir_world(0, 0, -1, 0);
@@ -535,9 +535,31 @@ void Renderer::render()
     //qDebug() << light_dir_view;
 
     QVector4D normal(0, -1, 0, 0);
-    QVector4D normal_view = normal * normalMatrix;
+    QVector4D tangent(-1, 0, 0, 0);
+    QVector4D bitangent(0, 0, -1, 0);
 
-    //qDebug() << QVector4D::dotProduct(normal_view, light_dir_view);
+    QVector4D normal_view = normal * normalMatrix;
+    QVector4D tangent_view = tangent * normalMatrix;
+    QVector4D bitangent_view = bitangent * normalMatrix;
+
+    QMatrix4x4 TBN;
+    TBN.setToIdentity();
+    TBN.setColumn(0, tangent_view);
+    TBN.setColumn(1, bitangent_view);
+    TBN.setColumn(2, normal_view);
+
+    QVector4D normal_tangent = normal_view * TBN;
+    QVector4D light_dir_tangent = light_dir_view * TBN;
+
+    float cosTheta0 = QVector4D::dotProduct(normal_view, -light_dir_view);
+    float cosTheta = QVector4D::dotProduct(normal_tangent, -light_dir_tangent);
+
+    //qDebug() << "tangent_view: " << tangent_view << "bitangent_view: " << bitangent_view << "normal_view: " << normal_view;
+
+    qDebug() << "light_dir_view: " << light_dir_view << "normal_view: " << normal_view << "cosTheta: " << cosTheta0;;
+
+    qDebug() << "light_dir_tangent: " << light_dir_tangent << "normal_tangent: " << normal_tangent << "cosTheta: " << cosTheta;
+
 
     QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
     QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -575,7 +597,7 @@ void Renderer::render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)0);
+    //glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, (void*)0);
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);
