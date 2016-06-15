@@ -20,8 +20,8 @@ struct Scene {
 };
 
 varying mediump vec2 texc;
-varying highp vec4 fragNormal;
 varying highp vec4 fragVertex;
+varying highp vec4 fragNormal;
 varying highp vec4 fragTangent;
 varying highp vec4 fragBitangent;
 
@@ -51,28 +51,26 @@ highp mat3 transpose(in highp mat3 inMatrix) {
 }
 
 void main() {
-    vec3 L = light.direction.xyz;
-    vec3 E = normalize(-fragVertex).xyz;
+    vec3 viewL = light.direction.xyz;
+    vec3 viewE = normalize(-fragVertex).xyz;
 
-
-    vec3 TangentN = normalize(texture2D( normalmap, texc).rgb * 2.0 - 1.0);
+    vec3 tangentN = normalize(texture2D( normalmap, texc).rgb * 2.0 - 1.0);
 
     mat3 TBN = transpose(mat3(
                 fragTangent.xyz,
                 fragBitangent.xyz,
                 fragNormal.xyz
-        ));
+                ));
 
-    vec3 TangentL = normalize(TBN * L);
-    vec3 TangentE = normalize(TBN * E);
-
-    float cosTheta = clamp(dot(TangentN, -TangentL), 0.0, 1.0);
-
-    vec3 TangentR = reflect(TangentL, TangentN);
-
-    float cosAlpha = clamp(dot(TangentE, TangentR), 0.0, 1.0);
+    vec3 tangentL = normalize(TBN * viewL);
+    vec3 tangentE = normalize(TBN * viewE);
 
     vec4 textureColor = texture2D(texture, texc);
+
+    float cosTheta = clamp(dot(tangentN, -tangentL), 0.0, 1.0);
+    vec3 tangentR = reflect(tangentL, tangentN);
+
+    float cosAlpha = clamp(dot(tangentE, tangentR), 0.0, 1.0);
 
     vec4 Iamb = 0.5 * (light.ambient + textureColor * length(light.ambient) * 0.333);
 

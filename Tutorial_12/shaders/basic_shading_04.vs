@@ -5,8 +5,8 @@ attribute highp vec4 tangents;
 attribute highp vec4 bitangents;
 
 varying mediump vec2 texc;
-varying highp vec4 fragNormal;
 varying highp vec4 fragVertex;
+varying highp vec4 fragNormal;
 varying highp vec4 fragTangent;
 varying highp vec4 fragBitangent;
 
