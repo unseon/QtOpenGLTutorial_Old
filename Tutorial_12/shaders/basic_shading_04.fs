@@ -58,18 +58,15 @@ void main() {
     vec3 TangentN = normalize(texture2D( normalmap, texc).rgb * 2.0 - 1.0);
 
     mat3 TBN = transpose(mat3(
-                fragTangent,
-                fragBitangent,
-                fragNormal
+                fragTangent.xyz,
+                fragBitangent.xyz,
+                fragNormal.xyz
         ));
 
     vec3 TangentL = normalize(TBN * L);
     vec3 TangentE = normalize(TBN * E);
-    vec3 TangentN1 = normalize(TBN * fragNormal.xyz);
 
     float cosTheta = clamp(dot(TangentN, -TangentL), 0.0, 1.0);
-    float cosTheta1 = clamp(dot(fragNormal.xyz, -L), 0.0, 1.0);
-    float cosTheta2 = clamp(dot(TangentN1, -TangentL), 0.0, 1.0);
 
     vec3 TangentR = reflect(TangentL, TangentN);
 
@@ -77,17 +74,14 @@ void main() {
 
     vec4 textureColor = texture2D(texture, texc);
 
-    //vec4 Iamb = 0.5 * (light.ambient + textureColor * length(light.ambient) * 0.333);
-    vec4 Iamb = vec4(0.0, 0.0, 0.0, 0.0);
+    vec4 Iamb = 0.5 * (light.ambient + textureColor * length(light.ambient) * 0.333);
 
     vec4 Idiff = textureColor * cosTheta;
-    //vec4 Idiff = vec4(0.0, 0.0, 1.0, 1.0) * cosTheta;
-    //vec4 Idiff = vec4(0.0, 0.0, 1.0, 1.0) * clamp(dot(fragTangent.xyz, vec3(0.0, 0.0, 1.0)), 0.0, 1.0);
 
-    Idiff = clamp(Idiff, 0.0, 1.0);
+    Idiff = clamp(Idiff, 0.0, 1.0) * 0.5;
 
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 
-    gl_FragColor = vec4((scene.backgroundColor + Iamb + Idiff).xyz, material.opacity);
+    gl_FragColor = vec4((scene.backgroundColor + Iamb + Idiff + Ispec).xyz, material.opacity);
 }
