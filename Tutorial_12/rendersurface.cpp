@@ -489,7 +489,6 @@ void Renderer::render()
         m_program->bindAttributeLocation("bitangents", 4);
         m_program->link();
 
-        //m_texture = new QOpenGLTexture(QImage(":/images/uvtemplate.png").mirrored());
         m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
         m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
 
@@ -568,7 +567,6 @@ void Renderer::render()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
-    //glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, (void*)0);
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);
