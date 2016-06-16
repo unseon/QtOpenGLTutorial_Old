@@ -478,6 +478,22 @@ void Renderer::render()
     updateCamera();
 
     if (!m_program) {
+        GLuint FramebufferName = 0;
+        glGenFramebuffers(1, &FramebufferName);
+        glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+
+        m_renderedImage = QImage(300, 200, Format_RGB888);
+        m_renderedTexture = new QOpenGLTexture(m_renderedImage);
+        m_renderedTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+        m_renderedTexture->setMagnificationFilter(QOpenGLTexture::Nearest);
+        m_renderedTexture->setFormat(QOpenGLTexture::RGB8_UNorm);
+
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture, 0);
+
+
+        glDrawBuffer(GL_COLOR_ATTACHMENT);
+
+
         m_program = new QOpenGLShaderProgram();
         m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_04.vs");
         m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading_04.fs");
@@ -552,7 +568,10 @@ void Renderer::render()
 
     m_program->setUniformValue("scene.backgroundColor", sceneBackgroundColor);
 
-    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
+    //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
+
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+    glViewport(0,0,300,200);
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);

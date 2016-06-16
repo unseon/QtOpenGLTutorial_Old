@@ -34,6 +34,9 @@ private:
     QOpenGLShaderProgram *m_program;
     QOpenGLTexture *m_texture;
     QOpenGLTexture *m_normalmap;
+    QOpenGLTexture *m_renderedTexture;
+
+    QImage m_renderedImage;
 
     QMatrix4x4 m_projection;
     QMatrix4x4 m_view;
