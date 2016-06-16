@@ -1,5 +1,4 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/uvtemplate.png</file>
     </qresource>
 </RCC>

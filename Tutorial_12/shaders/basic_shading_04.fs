@@ -9,7 +9,7 @@ struct Light {
 struct Material {
     vec4 emission;
     vec4 ambient;
-//    vec4 diffuse;
+    vec4 diffuse;
     vec4 specular;
     float shininess;
     float opacity;
@@ -76,7 +76,7 @@ void main() {
 
     vec4 Idiff = textureColor * cosTheta;
 
-    Idiff = clamp(Idiff, 0.0, 1.0) * 0.5;
+    Idiff = clamp(Idiff, 0.0, 1.0);
 
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
