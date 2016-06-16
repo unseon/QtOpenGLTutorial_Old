@@ -31,7 +31,7 @@ RenderSurface::RenderSurface()
 
     m_loop = new QTimer(this);
     connect(m_loop, &QTimer::timeout, this, &RenderSurface::tick);
-    //m_loop->start(33);
+    m_loop->start(33);
 
     time.start();
 }
