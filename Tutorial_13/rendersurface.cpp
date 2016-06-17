@@ -190,6 +190,7 @@ void RenderSurface::keyReleaseEvent(QKeyEvent *event)
 
 Renderer::Renderer()
     : m_program(0),
+      m_surfaceProgram(0),
       m_texture(0),
       m_rotationX(45.0f),
       m_rotationY(45.0f),
@@ -200,6 +201,8 @@ Renderer::Renderer()
     updateCamera();
 
     initializeMesh();
+
+    initializeSurface();
 }
 
 Renderer::~Renderer()
@@ -422,6 +425,11 @@ void Renderer::initializeMesh()
 
 }
 
+void Renderer::initializeSurface()
+{
+
+}
+
 void Renderer::updateCamera()
 {
     m_projection.setToIdentity();
@@ -477,6 +485,10 @@ void Renderer::render()
 
     updateCamera();
 
+    static GLuint FramebufferName = 0;
+    static GLuint renderedTexture;
+    static GLuint depthrenderbuffer;
+
     if (!m_program) {
         m_program = new QOpenGLShaderProgram();
         m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_04.vs");
@@ -496,6 +508,34 @@ void Renderer::render()
         glGenBuffers(1, &elementBuffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), m_indices.data(), GL_STATIC_DRAW);
+
+
+
+        glGenFramebuffers(1, &FramebufferName);
+        glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+
+
+        glGenTextures(1, &renderedTexture);
+
+        // "Bind" the newly created texture : all future texture functions will modify this texture
+        glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+        // Give an empty image to OpenGL ( the last "0" )
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, 300, 200, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+        // Poor filtering. Needed !
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+
+        glGenRenderbuffers(1, &depthrenderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+        GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+        glDrawBuffers(1, DrawBuffers);
     }
 
     m_program->bind();
@@ -552,7 +592,10 @@ void Renderer::render()
 
     m_program->setUniformValue("scene.backgroundColor", sceneBackgroundColor);
 
-    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
+
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+    glViewport(0,0,300,200); // Render on the whole framebuffer, complete from the lower left corner to the
+    //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -570,7 +613,61 @@ void Renderer::render()
 
     m_program->disableAttributeArray(0);
     m_program->disableAttributeArray(1);
+    m_program->disableAttributeArray(2);
+    m_program->disableAttributeArray(3);
+    m_program->disableAttributeArray(4);
     m_program->release();
+
+
+
+    // draw render texture to screen
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+
+    if (!m_surfaceProgram) {
+        m_surfaceProgram = new QOpenGLShaderProgram();
+        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/surface_shading.vs");
+        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/surface_shading.fs");
+
+        m_surfaceProgram->bindAttributeLocation("vertices", 0);
+        m_surfaceProgram->link();
+    }
+
+    m_surfaceProgram->bind();
+
+    m_surfaceProgram->enableAttributeArray(0);
+
+    float values[] = {
+        -1.0f, -1.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,
+    };
+
+    m_surfaceProgram->setAttributeArray(0, GL_FLOAT, values, 3);
+
+    // set red color
+    float color[] = {1.0f, 0.0f, 0.0f};
+    m_surfaceProgram->setUniformValueArray("color", color, 1, 3);
+
+    m_surfaceProgram->setUniformValue("texture", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
+
+    glDisable(GL_DEPTH_TEST);
+
+    glClearColor(0, 1, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+
+    m_surfaceProgram->disableAttributeArray(0);
+    m_surfaceProgram->release();
 
     m_window->resetOpenGLState();
 }

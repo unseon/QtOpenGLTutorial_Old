@@ -8,5 +8,7 @@
         <file>shaders/basic_shading_03.vs</file>
         <file>shaders/basic_shading_04.fs</file>
         <file>shaders/basic_shading_04.vs</file>
+        <file>shaders/surface_shading.fs</file>
+        <file>shaders/surface_shading.vs</file>
     </qresource>
 </RCC>

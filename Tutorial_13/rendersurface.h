@@ -31,7 +31,10 @@ private:
 
     QSize m_viewportSize;
     QQuickWindow *m_window;
+
     QOpenGLShaderProgram *m_program;
+    QOpenGLShaderProgram *m_surfaceProgram;
+
     QOpenGLTexture *m_texture;
     QOpenGLTexture *m_normalmap;
 
@@ -72,6 +75,7 @@ public:
 
     void updateCamera();
     void initializeMesh();
+    void initializeSurface();
 };
 
 class RenderSurface : public QQuickItem
