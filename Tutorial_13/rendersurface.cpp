@@ -8,6 +8,7 @@
 #include <qmath.h>
 #include <QThread>
 #include <QDir>
+#include <QPainter>
 
 #include <fbxsdk.h>
 #include <vector>
@@ -16,8 +17,9 @@
 using std::vector;
 using std::floor;
 
-RenderSurface::RenderSurface()
-    : m_renderer(0),
+RenderSurface::RenderSurface(QQuickItem *parent)
+    : QQuickPaintedItem(parent),
+      m_renderer(0),
       m_leftMouseDown(false),
       m_upKey(false),
       m_downKey(false),
@@ -25,31 +27,31 @@ RenderSurface::RenderSurface()
       m_rightKey(false),
       m_fps(0.0f)
 {
-    connect(this, &QQuickItem::windowChanged, this, &RenderSurface::handleWindowChanged);
+    //connect(this, &QQuickItem::windowChanged, this, &RenderSurface::handleWindowChanged);
 
     setAcceptedMouseButtons(Qt::AllButtons);
 
     m_loop = new QTimer(this);
     connect(m_loop, &QTimer::timeout, this, &RenderSurface::tick);
-    m_loop->start(33);
+    //m_loop->start(33);
 
     time.start();
 }
 
-void RenderSurface::handleWindowChanged(QQuickWindow *win)
+void RenderSurface::paint(QPainter *painter)
 {
-    if (win) {
-        connect(win, &QQuickWindow::beforeSynchronizing, this, &RenderSurface::sync, Qt::DirectConnection);
-        connect(win, &QQuickWindow::sceneGraphInvalidated, this, &RenderSurface::cleanup, Qt::DirectConnection);
+    qDebug() << "paint called";
 
-        win->setClearBeforeRendering(false);
+    if (!m_renderer) {
+        m_renderer = new Renderer();
+        //m_renderer->setWindow(window());
     }
-}
 
-void RenderSurface::updateWindow()
-{
-    if (window())
-        window()->update();
+    m_renderer->setViewportSize(QSize(width(), height()));
+    m_renderer->render();
+
+    painter->fillRect(0, 0, width(), height(), Qt::red);
+    painter->drawImage(0, 0, m_renderer->m_surface);
 }
 
 void RenderSurface::tick()
@@ -67,16 +69,16 @@ void RenderSurface::tick()
 
     if (m_leftKey) {
         m_renderer->setCamRotationY(m_renderer->camRotationY() - elapsedTime / 10000000);
-        updateWindow();
+        update();
     } else if (m_rightKey){
         m_renderer->setCamRotationY(m_renderer->camRotationY() + elapsedTime / 10000000);
-        updateWindow();
+        update();
     } else if (m_upKey) {
         m_renderer->setCamRotationX(m_renderer->camRotationX() - elapsedTime / 10000000);
-        updateWindow();
+        update();
     } else if (m_downKey) {
         m_renderer->setCamRotationX(m_renderer->camRotationX() + elapsedTime / 10000000);
-        updateWindow();
+        update();
     }
 
     //QThread::usleep(16666);
@@ -90,17 +92,6 @@ void RenderSurface::cleanup()
     }
 }
 
-void RenderSurface::sync()
-{
-    if (!m_renderer) {
-        m_renderer = new Renderer();
-        connect(window(), &QQuickWindow::beforeRendering, m_renderer, &Renderer::render, Qt::DirectConnection);
-    }
-
-    m_renderer->setViewportSize(window()->size() * window()->devicePixelRatio());
-    m_renderer->setWindow(window());
-}
-
 void RenderSurface::mouseMoveEvent(QMouseEvent *event)
 {
     //qDebug() << "Mouse Move";
@@ -109,15 +100,13 @@ void RenderSurface::mouseMoveEvent(QMouseEvent *event)
         QPointF currentPos = event->localPos();
         QPointF diff = currentPos - m_originPos;
 
-
-
         float rotX = m_originRotationX + diff.y() * 0.5;
         float rotY = m_originRotationY + diff.x() * 0.5;
 
         m_renderer->setCamRotationX(rotX);
         m_renderer->setCamRotationY(rotY);
 
-        updateWindow();
+        update();
     }
 }
 
@@ -145,7 +134,7 @@ void RenderSurface::wheelEvent(QWheelEvent *event)
     float curDist = m_renderer->camDistance();
     m_renderer->setCamDistance(curDist + event->angleDelta().y() * -0.005);
 
-    updateWindow();
+    update();
 }
 
 void RenderSurface::keyPressEvent(QKeyEvent *event)
@@ -194,7 +183,9 @@ Renderer::Renderer()
       m_texture(0),
       m_rotationX(45.0f),
       m_rotationY(45.0f),
-      m_distance(10.0f)
+      m_distance(10.0f),
+      m_surface(300, 200, QImage::QImage::Format_ARGB32),
+      m_data(0)
 {
     initializeOpenGLFunctions();
 
@@ -327,19 +318,19 @@ void Renderer::initializeMesh()
             m_uvs.push_back(uv[1]);
 
             FbxVector4 normal = pMesh->GetElementNormal(0)->GetDirectArray().GetAt(vertexId);
-            qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
+            //qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
             m_normals.push_back(normal[0]);
             m_normals.push_back(normal[1]);
             m_normals.push_back(normal[2]);
 
             FbxVector4 tangent = pMesh->GetElementTangent(0)->GetDirectArray().GetAt(vertexId);
-            qDebug() << "idx: " << lControlPointIndex <<"tangent: " << tangent[0] << tangent[1] << tangent[2];
+            //qDebug() << "idx: " << lControlPointIndex <<"tangent: " << tangent[0] << tangent[1] << tangent[2];
             m_tangents.push_back(tangent[0]);
             m_tangents.push_back(tangent[1]);
             m_tangents.push_back(tangent[2]);
 
             FbxVector4 bitangent = pMesh->GetElementBinormal(0)->GetDirectArray().GetAt(vertexId);
-            qDebug() << "idx: " << lControlPointIndex <<"bitangent: " << bitangent[0] << bitangent[1] << bitangent[2];
+            //qDebug() << "idx: " << lControlPointIndex <<"bitangent: " << bitangent[0] << bitangent[1] << bitangent[2];
             m_bitangents.push_back(bitangent[0]);
             m_bitangents.push_back(bitangent[1]);
             m_bitangents.push_back(bitangent[2]);
@@ -370,7 +361,7 @@ void Renderer::initializeMesh()
 
     for (int i = 0; i < leNormal->GetDirectArray().GetCount(); i++) {
         FbxVector4 normal = leNormal->GetDirectArray().GetAt(i);
-        qDebug() << "idx: " << i << ":" << normal[0] << normal[1] << normal[2];
+        //qDebug() << "idx: " << i << ":" << normal[0] << normal[1] << normal[2];
     }
 
 
@@ -381,7 +372,7 @@ void Renderer::initializeMesh()
 
         int polygonSize = pMesh->GetPolygonSize(i);
 
-        qDebug() << "polygonSize: " << polygonSize;
+        //qDebug() << "polygonSize: " << polygonSize;
 
         if (polygonSize == 3) {
             m_indices.push_back(idx);
@@ -481,7 +472,7 @@ void Renderer::render()
 {
     static GLuint elementBuffer;
 
-    //qDebug() << "render called";
+    qDebug() << "render called";
 
     updateCamera();
 
@@ -521,7 +512,7 @@ void Renderer::render()
         glBindTexture(GL_TEXTURE_2D, renderedTexture);
 
         // Give an empty image to OpenGL ( the last "0" )
-        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, 300, 200, 0,GL_RGB, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 300, 200, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
         // Poor filtering. Needed !
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -537,6 +528,12 @@ void Renderer::render()
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, DrawBuffers);
     }
+
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
 
     m_program->bind();
 
@@ -592,9 +589,8 @@ void Renderer::render()
 
     m_program->setUniformValue("scene.backgroundColor", sceneBackgroundColor);
 
-
     glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
-    glViewport(0,0,300,200); // Render on the whole framebuffer, complete from the lower left corner to the
+    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
     //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glEnable(GL_DEPTH_TEST);
@@ -619,55 +615,63 @@ void Renderer::render()
     m_program->release();
 
 
+    delete[] m_data;
+    m_data = new uchar[m_viewportSize.width() * m_viewportSize.height() * 4];
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+
+    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
+    qDebug() << "m_surface updated";
 
     // draw render texture to screen
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 
-    if (!m_surfaceProgram) {
-        m_surfaceProgram = new QOpenGLShaderProgram();
-        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/surface_shading.vs");
-        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/surface_shading.fs");
+//    if (!m_surfaceProgram) {
+//        m_surfaceProgram = new QOpenGLShaderProgram();
+//        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/surface_shading.vs");
+//        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/surface_shading.fs");
 
-        m_surfaceProgram->bindAttributeLocation("vertices", 0);
-        m_surfaceProgram->link();
-    }
+//        m_surfaceProgram->bindAttributeLocation("vertices", 0);
+//        m_surfaceProgram->link();
+//    }
 
-    m_surfaceProgram->bind();
+//    m_surfaceProgram->bind();
 
-    m_surfaceProgram->enableAttributeArray(0);
+//    m_surfaceProgram->enableAttributeArray(0);
 
-    float values[] = {
-        -1.0f, -1.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, 0.0f,
-         1.0f, -1.0f, 0.0f,
-         1.0f,  1.0f, 0.0f,
-    };
+//    float values[] = {
+//        -1.0f, -1.0f, 0.0f,
+//         1.0f, -1.0f, 0.0f,
+//        -1.0f,  1.0f, 0.0f,
+//        -1.0f,  1.0f, 0.0f,
+//         1.0f, -1.0f, 0.0f,
+//         1.0f,  1.0f, 0.0f,
+//    };
 
-    m_surfaceProgram->setAttributeArray(0, GL_FLOAT, values, 3);
+//    m_surfaceProgram->setAttributeArray(0, GL_FLOAT, values, 3);
 
-    // set red color
-    float color[] = {1.0f, 0.0f, 0.0f};
-    m_surfaceProgram->setUniformValueArray("color", color, 1, 3);
+//    // set red color
+//    float color[] = {1.0f, 0.0f, 0.0f};
+//    m_surfaceProgram->setUniformValueArray("color", color, 1, 3);
 
-    m_surfaceProgram->setUniformValue("texture", 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+//    m_surfaceProgram->setUniformValue("texture", 0);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, renderedTexture);
 
-    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
+    //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST);
 
-    glClearColor(0, 1, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClearColor(0, 1, 1, 1);
+    //glClear(GL_COLOR_BUFFER_BIT);
 
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
+//    glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
 
-    m_surfaceProgram->disableAttributeArray(0);
-    m_surfaceProgram->release();
+//    m_surfaceProgram->disableAttributeArray(0);
+//    m_surfaceProgram->release();
 
-    m_window->resetOpenGLState();
 }

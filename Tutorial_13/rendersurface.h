@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QElapsedTimer>
+#include <QQuickPaintedItem>
 
 #include <vector>
 
@@ -21,8 +22,6 @@ public:
     ~Renderer();
 
     void setViewportSize(const QSize &size) { m_viewportSize = size; }
-    void setWindow(QQuickWindow *window) { m_window = window; }
-
 public slots:
     void render();
 
@@ -64,6 +63,8 @@ private:
     QString m_textureFile;
     QString m_normalmapFile;
 
+    QSize m_size;
+
 public:
     float camRotationX();
     float camRotationY();
@@ -76,25 +77,28 @@ public:
     void updateCamera();
     void initializeMesh();
     void initializeSurface();
+
+    void setSize(const QSize &size);
+
+    QImage m_surface;
+    uchar *m_data;
 };
 
-class RenderSurface : public QQuickItem
+class RenderSurface : public QQuickPaintedItem
 {
     Q_OBJECT
 
 public:
-    RenderSurface();
+    RenderSurface(QQuickItem* parent = 0);
     Q_PROPERTY(float fps MEMBER m_fps NOTIFY fpsChanged)
 
 signals:
     void fpsChanged();
 
 public slots:
-    void sync();
     void cleanup();
 
 private slots:
-    void handleWindowChanged(QQuickWindow *win);
     void tick();
 
 private:
@@ -114,8 +118,6 @@ private:
     bool m_leftKey;
     bool m_rightKey;
 
-    void updateWindow();
-
 protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -123,6 +125,8 @@ protected:
     void wheelEvent(QWheelEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
+
+    void paint(QPainter *painter);
 };
 
 #endif // RENDERSURFACE_H
