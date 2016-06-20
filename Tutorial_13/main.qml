@@ -19,23 +19,23 @@ Window {
 
             RenderSurface {
                 id: renderSurface
-                width: frame.width / 2
-                height: frame.height / 2
+                width: Math.floor(frame.width / 2)
+                height: Math.floor(frame.height / 2)
             }
 
             RenderSurface {
-                width: frame.width / 2
-                height: frame.height / 2
+                width: Math.floor(frame.width / 2)
+                height: Math.floor(frame.height / 2)
             }
 
             RenderSurface {
-                width: frame.width / 2
-                height: frame.height / 2
+                width: Math.floor(frame.width / 2)
+                height: Math.floor(frame.height / 2)
             }
 
             RenderSurface {
-                width: frame.width / 2
-                height: frame.height / 2
+                width: Math.floor(frame.width / 2)
+                height: Math.floor(frame.height / 2)
             }
         }
     }

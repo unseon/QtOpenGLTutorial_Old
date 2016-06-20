@@ -47,10 +47,11 @@ void RenderSurface::paint(QPainter *painter)
         //m_renderer->setWindow(window());
     }
 
-    m_renderer->setViewportSize(QSize(width(), height()));
+
+    m_renderer->setViewportSize(QSize(int(width()), int(height())));
     m_renderer->render();
 
-    painter->fillRect(0, 0, width(), height(), Qt::red);
+    //painter->fillRect(0, 0, width(), height(), Qt::red);
     painter->drawImage(0, 0, m_renderer->m_surface);
 }
 
@@ -185,7 +186,10 @@ Renderer::Renderer()
       m_rotationY(45.0f),
       m_distance(10.0f),
       m_surface(300, 200, QImage::QImage::Format_ARGB32),
-      m_data(0)
+      m_data(0),
+    　m_frameBuffer(0),
+        m_renderedTexture(0),
+        m_depthRenderBuffer(0)
 {
     initializeOpenGLFunctions();
 
@@ -476,10 +480,6 @@ void Renderer::render()
 
     updateCamera();
 
-    static GLuint FramebufferName = 0;
-    static GLuint renderedTexture;
-    static GLuint depthrenderbuffer;
-
     if (!m_program) {
         m_program = new QOpenGLShaderProgram();
         m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_04.vs");
@@ -502,14 +502,14 @@ void Renderer::render()
 
 
 
-        glGenFramebuffers(1, &FramebufferName);
-        glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+        glGenFramebuffers(1, &m_frameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
 
 
-        glGenTextures(1, &renderedTexture);
+        glGenTextures(1, &m_renderedTexture);
 
         // "Bind" the newly created texture : all future texture functions will modify this texture
-        glBindTexture(GL_TEXTURE_2D, renderedTexture);
+        glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 
         // Give an empty image to OpenGL ( the last "0" )
         glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 300, 200, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -519,21 +519,22 @@ void Renderer::render()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
 
-        glGenRenderbuffers(1, &depthrenderbuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+        glGenRenderbuffers(1, &m_depthRenderBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
 
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture, 0);
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, DrawBuffers);
     }
 
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
     glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     m_program->bind();
 
@@ -589,7 +590,7 @@ void Renderer::render()
 
     m_program->setUniformValue("scene.backgroundColor", sceneBackgroundColor);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
     //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
@@ -619,7 +620,7 @@ void Renderer::render()
     m_data = new uchar[m_viewportSize.width() * m_viewportSize.height() * 4];
 
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
     glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
@@ -660,7 +661,7 @@ void Renderer::render()
 
 //    m_surfaceProgram->setUniformValue("texture", 0);
 //    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+//    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 
     //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 

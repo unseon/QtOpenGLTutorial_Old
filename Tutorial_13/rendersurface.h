@@ -65,6 +65,10 @@ private:
 
     QSize m_size;
 
+    GLuint m_frameBuffer;
+    GLuint m_renderedTexture;
+    GLuint m_depthRenderBuffer;
+
 public:
     float camRotationX();
     float camRotationY();
