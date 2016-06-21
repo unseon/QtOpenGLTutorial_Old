@@ -21,7 +21,7 @@ public:
     Renderer();
     ~Renderer();
 
-    void setViewportSize(const QSize &size) { m_viewportSize = size; }
+    void setViewportSize(const QSize &size);
 public slots:
     void render();
 
@@ -44,6 +44,8 @@ private:
     float m_distance;
     float m_rotationX;
     float m_rotationY;
+
+    GLuint m_elementBuffer;
 
     float *m_vertexBufferData;
     float *m_uvBufferData;
@@ -69,6 +71,10 @@ private:
     GLuint m_renderedTexture;
     GLuint m_depthRenderBuffer;
 
+    bool m_isViewportDirty;
+
+    void prepareRender();
+
 public:
     float camRotationX();
     float camRotationY();
@@ -81,8 +87,6 @@ public:
     void updateCamera();
     void initializeMesh();
     void initializeSurface();
-
-    void setSize(const QSize &size);
 
     QImage m_surface;
     uchar *m_data;

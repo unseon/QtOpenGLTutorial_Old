@@ -472,12 +472,14 @@ void Renderer::setCamDistance(float value)
 }
 
 
-void Renderer::render()
+void Renderer::setViewportSize(const QSize &size)
 {
-    static GLuint elementBuffer;
+    m_viewportSize = size;
+    m_isViewportDirty = true;
+}
 
-    qDebug() << "render called";
-
+void Renderer::prepareRender()
+{
     updateCamera();
 
     if (!m_program) {
@@ -496,11 +498,9 @@ void Renderer::render()
         m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
 
         qDebug() << "glBufferData: " << m_indices.size() * 3;
-        glGenBuffers(1, &elementBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+        glGenBuffers(1, &m_elementBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), m_indices.data(), GL_STATIC_DRAW);
-
-
 
         glGenFramebuffers(1, &m_frameBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
@@ -512,29 +512,47 @@ void Renderer::render()
         glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 
         // Give an empty image to OpenGL ( the last "0" )
-        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 300, 200, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        //glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 300, 200, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
         // Poor filtering. Needed !
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-
-        glGenRenderbuffers(1, &m_depthRenderBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1024, 768);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
-
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture, 0);
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, DrawBuffers);
+
+        glGenRenderbuffers(1, &m_depthRenderBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
+        //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 300, 200);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
     }
 
+    if (m_isViewportDirty) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewportSize.width(), m_viewportSize.height());
+
+        if (m_data) {
+            delete[] m_data;
+        }
+
+        m_data = new uchar[m_viewportSize.width() * m_viewportSize.height() * 4];
+
+        m_isViewportDirty = false;
+    }
+}
+
+void Renderer::render()
+{
+    qDebug() << "render called";
+
+    prepareRender();
 
     m_program->bind();
 
@@ -601,7 +619,7 @@ void Renderer::render()
     glClearColor(0, 0, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -615,64 +633,10 @@ void Renderer::render()
     m_program->disableAttributeArray(4);
     m_program->release();
 
-
-    delete[] m_data;
-    m_data = new uchar[m_viewportSize.width() * m_viewportSize.height() * 4];
-
+    // bitblt to m_surface
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
     glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
-    qDebug() << "m_surface updated";
-
-    // draw render texture to screen
-
-//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-//    if (!m_surfaceProgram) {
-//        m_surfaceProgram = new QOpenGLShaderProgram();
-//        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/surface_shading.vs");
-//        m_surfaceProgram->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/surface_shading.fs");
-
-//        m_surfaceProgram->bindAttributeLocation("vertices", 0);
-//        m_surfaceProgram->link();
-//    }
-
-//    m_surfaceProgram->bind();
-
-//    m_surfaceProgram->enableAttributeArray(0);
-
-//    float values[] = {
-//        -1.0f, -1.0f, 0.0f,
-//         1.0f, -1.0f, 0.0f,
-//        -1.0f,  1.0f, 0.0f,
-//        -1.0f,  1.0f, 0.0f,
-//         1.0f, -1.0f, 0.0f,
-//         1.0f,  1.0f, 0.0f,
-//    };
-
-//    m_surfaceProgram->setAttributeArray(0, GL_FLOAT, values, 3);
-
-//    // set red color
-//    float color[] = {1.0f, 0.0f, 0.0f};
-//    m_surfaceProgram->setUniformValueArray("color", color, 1, 3);
-
-//    m_surfaceProgram->setUniformValue("texture", 0);
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
-
-    //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
-
-    //glDisable(GL_DEPTH_TEST);
-
-    //glClearColor(0, 1, 1, 1);
-    //glClear(GL_COLOR_BUFFER_BIT);
-
-//    glDrawArrays(GL_TRIANGLE_STRIP, 0, 6);
-
-//    m_surfaceProgram->disableAttributeArray(0);
-//    m_surfaceProgram->release();
-
 }
