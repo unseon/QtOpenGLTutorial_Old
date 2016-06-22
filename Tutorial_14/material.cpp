@@ -100,9 +100,21 @@ void Material::release()
     m_program->release();
 }
 
-void Material::draw()
+void Material::draw(Scene* scene)
 {
+    activate(scene);
+
     QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
-    gl->glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+    static GLuint elementBuffer = 0;
+
+    if (elementBuffer == 0) {
+        glGenBuffers(1, &elementBuffer);
+    }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_mesh->m_indices.size() * sizeof(unsigned int), m_mesh->m_indices.data(), GL_STATIC_DRAW);
+    gl->glDrawElements(GL_TRIANGLES, m_mesh->m_indices.size(), GL_UNSIGNED_INT, (void*)0);
+
+    release();
 }

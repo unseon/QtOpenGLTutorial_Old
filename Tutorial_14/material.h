@@ -30,12 +30,15 @@ public:
     QOpenGLShaderProgram *m_program;
 
     void init();
-    void activate(Scene* scene);
-    void draw();
-    void release();
+
+    void draw(Scene* scene);
 
     void setLight(QColor ambient, QColor specular, QVector4D light_dir_view);
     void setScene(QColor sceneBackground);
+
+protected:
+    void activate(Scene* scene);
+    void release();
 };
 
 #endif // MATERIAL_H

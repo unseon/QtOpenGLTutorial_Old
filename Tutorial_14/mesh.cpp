@@ -13,11 +13,6 @@ void Mesh::draw(Scene* scene)
 
     if (!m_material) {
         // activate
-        m_material->activate(scene);
-
-        // draw element
-
-        // release
-        m_material->release();
+        m_material->draw(scene);
     }
 }
