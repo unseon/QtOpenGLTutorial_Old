@@ -29,6 +29,8 @@ public:
 
     QOpenGLShaderProgram *m_program;
 
+    static GLuint m_elementBuffer;
+
     void init();
     void activate(Scene* scene);
     void draw();

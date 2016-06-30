@@ -8,7 +8,8 @@ SOURCES += main.cpp \
     node.cpp \
     mesh.cpp \
     material.cpp \
-    scene.cpp
+    scene.cpp \
+    fbxparser.cpp
 
 RESOURCES += qml.qrc \
     textures.qrc \
@@ -26,7 +27,8 @@ HEADERS += \
     node.h \
     mesh.h \
     material.h \
-    scene.h
+    scene.h \
+    fbxparser.h
 
 DISTFILES +=
 

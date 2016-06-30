@@ -2,6 +2,8 @@
 
 #include <QOpenGLShaderProgram>
 
+GLuint Material::m_elementBuffer = 0;
+
 Material::Material(Mesh* mesh)
     : m_program(0)
 {
@@ -35,6 +37,10 @@ void Material::activate(Scene* scene)
 {
     if (!m_program) {
         init();
+    }
+
+    if (!m_elementBuffer) {
+        glGenBuffers(1, &m_elementBuffer);
     }
 
     m_program->bind();
@@ -104,5 +110,6 @@ void Material::draw()
 {
     QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
-    gl->glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
+    gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_mesh->m_indices.size() * sizeof(unsigned int), m_mesh->m_indices.data(), GL_STATIC_DRAW);
+    gl->glDrawElements(GL_TRIANGLES, m_mesh->m_indices.size(), GL_UNSIGNED_INT, (void*)0);
 }
