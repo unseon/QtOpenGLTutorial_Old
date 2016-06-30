@@ -106,8 +106,10 @@ void Material::release()
     m_program->release();
 }
 
-void Material::draw()
+void Material::draw(Scene* scene)
 {
+    activate(scene);
+
     QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
     gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_mesh->m_indices.size() * sizeof(unsigned int), m_mesh->m_indices.data(), GL_STATIC_DRAW);
