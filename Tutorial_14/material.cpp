@@ -2,12 +2,15 @@
 
 #include <QOpenGLShaderProgram>
 
-GLuint Material::m_elementBuffer = 0;
+#include "scene.h"
+#include "mesh.h"
 
-Material::Material(Mesh* mesh)
-    : m_program(0)
+Material::Material()
+    : m_program(0),
+      m_mesh(0)
 {
-    m_mesh = mesh;
+    m_shininess = 0.5f;
+    m_opacity = 1.0f;
 }
 
 void Material::init()
@@ -35,12 +38,8 @@ void Material::init()
 
 void Material::activate(Scene* scene)
 {
-    if (!m_program) {
+    if (m_program == NULL) {
         init();
-    }
-
-    if (!m_elementBuffer) {
-        glGenBuffers(1, &m_elementBuffer);
     }
 
     m_program->bind();
@@ -63,24 +62,18 @@ void Material::activate(Scene* scene)
     m_program->setAttributeArray(3, GL_FLOAT, &m_mesh->m_tangents[0], 3);
     m_program->setAttributeArray(4, GL_FLOAT, &m_mesh->m_bitangents[0], 3);
 
-    QMatrix4x4 model = m_mesh->m_node->netMatrix();
+    //QMatrix4x4 model = m_mesh->m_node->netMatrix() * scene->m_modelMatrix;
+    QMatrix4x4 model = scene->m_modelMatrix;
     QMatrix4x4 view = scene->m_viewMatrix;
     QMatrix4x4 projection = scene->m_viewMatrix;
 
     QMatrix4x4 mvp = projection * view * model;
     QMatrix4x4 mv = view * model;
     QMatrix4x4 normalMatrix = mv.inverted().transposed();
-    QMatrix4x4 lightNormalMatrix = view.inverted().transposed();
+//    QMatrix4x4 lightNormalMatrix = view.inverted().transposed();
 
     QVector4D lightDirWorld = scene->m_lightDirWorld.normalized();
     QVector4D lightDirView = lightDirWorld * normalMatrix;
-
-    QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-    QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
-    QVector4D lightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
-    QVector4D lightSpecularColor(0.8f, 0.8f, 0.8f, 1.0f);
-    float materialShininess = 0.5f;
-    float materialOpacity = 1.0f;
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);
@@ -106,12 +99,4 @@ void Material::release()
     m_program->release();
 }
 
-void Material::draw(Scene* scene)
-{
-    activate(scene);
 
-    QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
-    gl->glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_mesh->m_indices.size() * sizeof(unsigned int), m_mesh->m_indices.data(), GL_STATIC_DRAW);
-    gl->glDrawElements(GL_TRIANGLES, m_mesh->m_indices.size(), GL_UNSIGNED_INT, (void*)0);
-}

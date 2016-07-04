@@ -14,6 +14,8 @@
 
 using std::vector;
 
+class Scene;
+
 class Renderer : public QObject, protected QOpenGLFunctions
 {
     Q_OBJECT
@@ -75,11 +77,13 @@ public:
     void setCamDistance(float value);
 
     void updateCamera();
-    void initializeMesh();
+    void initializeScene();
     void initializeSurface();
 
     QImage m_surface;
     uchar *m_data;
+
+    Scene* m_scene;
 };
 
 class RenderSurface : public QQuickPaintedItem

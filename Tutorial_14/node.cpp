@@ -1,18 +1,35 @@
 #include "node.h"
 
+#include "mesh.h"
+#include "scene.h"
+
+
 Node::Node(Node* parent)
+    :m_mesh(0)
 {
     m_parent = parent;
 }
 
+void Node::addChild(Node* node)
+{
+    m_children.push_back(node);
+    node->m_parent = this;
+}
+
 void Node::render(Scene* scene)
 {
+    renderSelf(scene);
 
+    renderChildren(scene);
 }
 
 void Node::renderSelf(Scene* scene)
 {
+    updateMatrix();
 
+    if (m_mesh != NULL) {
+        m_mesh->draw(scene);
+    }
 }
 
 void Node::renderChildren(Scene* scene)
@@ -26,7 +43,7 @@ QMatrix4x4 Node::netMatrix()
 {
     updateMatrix();
 
-    if (!m_parent) {
+    if (m_parent == NULL) {
         return m_transform;
     } else {
         return m_parent->netMatrix() * m_transform;

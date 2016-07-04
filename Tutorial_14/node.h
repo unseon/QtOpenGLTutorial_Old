@@ -6,9 +6,9 @@
 #include <vector>
 #include <QOpenGLFunctions>
 
-#include "scene.h"
 
 class Mesh;
+class Scene;
 
 using std::vector;
 
@@ -16,6 +16,8 @@ class Node
 {
 public:
     Node(Node* parent = 0);
+
+    QString m_name;
 
     QVector3D m_position;
     QVector3D m_rotation;
@@ -32,6 +34,7 @@ public:
     QMatrix4x4 netMatrix();
 
     void updateMatrix();
+    void addChild(Node* node);
 
 protected:
     void renderSelf(Scene* scene);

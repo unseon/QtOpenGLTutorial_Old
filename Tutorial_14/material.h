@@ -11,7 +11,7 @@
 class Material
 {
 public:
-    Material(Mesh *mesh);
+    Material();
 
     Mesh* m_mesh;
 
@@ -29,16 +29,8 @@ public:
 
     QOpenGLShaderProgram *m_program;
 
-    static GLuint m_elementBuffer;
-
     void init();
 
-    void draw(Scene* scene);
-
-    void setLight(QColor ambient, QColor specular, QVector4D light_dir_view);
-    void setScene(QColor sceneBackground);
-
-protected:
     void activate(Scene* scene);
     void release();
 };

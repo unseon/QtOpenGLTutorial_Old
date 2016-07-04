@@ -22,6 +22,9 @@ public:
 
     QMatrix4x4 m_projectionMatrix;
     QMatrix4x4 m_viewMatrix;
+    QMatrix4x4 m_modelMatrix;
+
+    void render();
 };
 
 #endif // SCENE_H

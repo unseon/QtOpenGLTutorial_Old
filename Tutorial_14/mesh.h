@@ -12,7 +12,7 @@ class Material;
 class Mesh
 {
 public:
-    Mesh(Node* node);
+    Mesh();
 
     Node* m_node;
 
@@ -25,6 +25,8 @@ public:
     vector<unsigned int> m_indices;
 
     Material* m_material;
+
+    static GLuint m_elementBuffer;
 
     void draw(Scene* scene);
 };
