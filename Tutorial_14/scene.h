@@ -4,6 +4,7 @@
 #include <QVector4D>
 #include <QMatrix4x4>
 #include <QColor>
+#include <QVector4D>
 
 class Node;
 
@@ -14,11 +15,11 @@ public:
 
     Node* m_root;
 
-    QColor m_lightAmbientColor;
-    QColor m_lightSpecularColor;
+    QVector4D m_lightAmbientColor;
+    QVector4D m_lightSpecularColor;
     QVector4D m_lightDirWorld;
 
-    QColor m_backgroundColor;
+    QVector4D m_backgroundColor;
 
     QMatrix4x4 m_projectionMatrix;
     QMatrix4x4 m_viewMatrix;
