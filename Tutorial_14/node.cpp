@@ -55,11 +55,11 @@ void Node::updateMatrix()
     QMatrix4x4 mat;
     mat.setToIdentity();
 
-    mat.scale(m_scale);
+    mat.translate(m_position);
     mat.rotate(m_rotation.x(), 1.0f, 0.0f, 0.0f);
     mat.rotate(m_rotation.y(), 0.0f, 1.0f, 0.0f);
     mat.rotate(m_rotation.z(), 0.0f, 0.0f, 1.0f);
-    mat.translate(m_position);
+    mat.scale(m_scale);
 
     m_transform = mat;
 }

@@ -242,7 +242,8 @@ void Renderer::initializeScene()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    const char* myImportFile = "../../monkey.fbx";
+    const char* myImportFile = "../../objects.fbx";
+    //const char* myImportFile = "../../monkey.fbx";
     //const char* myImportFile = "../../cube.fbx";
 
     QFile file(myImportFile);
