@@ -10,5 +10,11 @@
         <file>shaders/basic_shading_04.vs</file>
         <file>shaders/surface_shading.fs</file>
         <file>shaders/surface_shading.vs</file>
+        <file>shaders/solid_color_shading.fs</file>
+        <file>shaders/solid_color_shading.vs</file>
+        <file>shaders/texture_shading.fs</file>
+        <file>shaders/texture_shading.vs</file>
+        <file>shaders/normal_map_shading.fs</file>
+        <file>shaders/normal_map_shading.vs</file>
     </qresource>
 </RCC>

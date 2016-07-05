@@ -11,13 +11,26 @@ Material::Material()
 {
     m_shininess = 0.5f;
     m_opacity = 1.0f;
+    m_diffuse = QVector4D(0.5f, 0.5f, 0.5f, 1.0f);
+    m_specular = QVector4D(0.8f, 0.8f, 0.8f, 1.0f);
+
+    //m_shaderName = "solid_color_shading";
+    //m_shaderName = "normal_map_shading";
+    m_shaderName = "texture_shading";
 }
 
 void Material::init()
 {
+
+    QString vertexShaderPath = m_shaderName;
+    vertexShaderPath.prepend(":/shaders/").append(".vs");
+
+    QString fragmentShaderPath = m_shaderName;
+    fragmentShaderPath.prepend(":/shaders/").append(".fs");
+
     m_program = new QOpenGLShaderProgram();
-    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_04.vs");
-    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading_04.fs");
+    m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, vertexShaderPath);
+    m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, fragmentShaderPath);
 
     m_program->bindAttributeLocation("vertices", 0);
     m_program->bindAttributeLocation("texCoord", 1);
@@ -63,17 +76,16 @@ void Material::activate(Scene* scene)
     m_program->setAttributeArray(4, GL_FLOAT, &m_mesh->m_bitangents[0], 3);
 
     QMatrix4x4 model = m_mesh->m_node->netMatrix() * scene->m_modelMatrix;
-    //QMatrix4x4 model = scene->m_modelMatrix;
     QMatrix4x4 view = scene->m_viewMatrix;
     QMatrix4x4 projection = scene->m_projectionMatrix;
 
     QMatrix4x4 mvp = projection * view * model;
     QMatrix4x4 mv = view * model;
     QMatrix4x4 normalMatrix = mv.inverted().transposed();
-    QMatrix4x4 lightNormalMatrix = view.inverted().transposed();
+    //QMatrix4x4 lightNormalMatrix = view.inverted().transposed();
 
     QVector4D lightDirWorld = scene->m_lightDirWorld.normalized();
-    QVector4D lightDirView = lightDirWorld * lightNormalMatrix;
+    QVector4D lightDirView = lightDirWorld * normalMatrix;
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);
@@ -81,6 +93,12 @@ void Material::activate(Scene* scene)
 
     m_program->setUniformValue("light.ambient", scene->m_lightAmbientColor);
     m_program->setUniformValue("light.specular", scene->m_lightSpecularColor);
+
+    //m_program->setUniformValue("material.emission", m_emission);
+    //m_program->setUniformValue("material.ambient", m_ambient);
+    m_program->setUniformValue("material.diffuse", m_diffuse);
+    m_program->setUniformValue("material.specular", m_specular);
+
     m_program->setUniformValue("material.shininess", m_shininess);
     m_program->setUniformValue("material.opacity", m_opacity);
 
