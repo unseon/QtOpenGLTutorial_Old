@@ -204,5 +204,28 @@ Material* FbxParser::parseMaterial(FbxSurfaceMaterial *fMaterial)
         material->m_normalmapFile = (char *) lFileTexture2->GetFileName();
     }
 
+    FbxPropertyT<FbxDouble3> lKFbxDouble3;
+    FbxPropertyT<FbxDouble> lKFbxDouble1;
+
+    lKFbxDouble3 =((FbxSurfacePhong *) fMaterial)->Ambient;
+    material->m_ambient = QVector4D(lKFbxDouble3.Get()[0], lKFbxDouble3.Get()[1], lKFbxDouble3.Get()[2], 1.0f);
+
+    lKFbxDouble3 =((FbxSurfacePhong *) fMaterial)->Diffuse;
+    material->m_diffuse = QVector4D(lKFbxDouble3.Get()[0], lKFbxDouble3.Get()[1], lKFbxDouble3.Get()[2], 1.0f);
+
+    lKFbxDouble3 =((FbxSurfacePhong *) fMaterial)->Specular;
+    material->m_specular = QVector4D(lKFbxDouble3.Get()[0], lKFbxDouble3.Get()[1], lKFbxDouble3.Get()[2], 1.0f);
+
+    lKFbxDouble3 =((FbxSurfacePhong *) fMaterial)->Emissive;
+    material->m_emission = QVector4D(lKFbxDouble3.Get()[0], lKFbxDouble3.Get()[1], lKFbxDouble3.Get()[2], 1.0f);
+
+//    lKFbxDouble1 =((FbxSurfacePhong *) fMaterial)->TransparencyFactor;
+//    material->m_opacity = lKFbxDouble1.Get();
+
+    lKFbxDouble1 =((FbxSurfacePhong *) fMaterial)->Shininess;
+    material->m_shininess = lKFbxDouble1.Get();
+
+    //lKFbxDouble1 =((FbxSurfacePhong *) lMaterial)->ReflectionFactor;
+
     return material;
 }

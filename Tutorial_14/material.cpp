@@ -7,20 +7,37 @@
 
 Material::Material()
     : m_program(0),
-      m_mesh(0)
+      m_mesh(0),
+      m_texture(0),
+      m_normalmap(0)
 {
     m_shininess = 0.5f;
     m_opacity = 1.0f;
     m_diffuse = QVector4D(0.5f, 0.5f, 0.5f, 1.0f);
     m_specular = QVector4D(0.8f, 0.8f, 0.8f, 1.0f);
 
-    //m_shaderName = "solid_color_shading";
+    m_shaderName = "solid_color_shading";
     //m_shaderName = "normal_map_shading";
-    m_shaderName = "texture_shading";
+    //m_shaderName = "texture_shading";
 }
 
 void Material::init()
 {
+    m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
+    m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
+    m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
+
+    m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
+    m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
+    m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
+
+    if (m_texture != NULL && m_normalmap !=NULL) {
+        m_shaderName = "normal_map_shading";
+    } else if (m_texture != NULL) {
+        m_shaderName = "texture_shading";
+    } else {
+        m_shaderName = "solid_color_shading";
+    }
 
     QString vertexShaderPath = m_shaderName;
     vertexShaderPath.prepend(":/shaders/").append(".vs");
@@ -38,14 +55,6 @@ void Material::init()
     m_program->bindAttributeLocation("tangents", 3);
     m_program->bindAttributeLocation("bitangents", 4);
     m_program->link();
-
-    m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
-    m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
-    m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
-
-    m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
-    m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
-    m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
 }
 
 
