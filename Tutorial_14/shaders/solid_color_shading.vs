@@ -20,7 +20,7 @@ void main() {
     texc = texCoord;
     fragVertex = MV * vertices;
 
-    fragNormal = normalize((NormalMatrix * normals).xyz);
+    fragNormal = (NormalMatrix * normals).xyz;
     fragTangent = NormalMatrix * tangents;
     fragBitangent = NormalMatrix * bitangents;
 }

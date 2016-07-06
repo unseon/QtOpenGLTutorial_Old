@@ -103,6 +103,9 @@ Mesh* FbxParser::parseMesh(FbxMesh* fMesh)
     qDebug() << "PolygonCount: " << fMesh->GetPolygonCount();
     int polygonCount = fMesh->GetPolygonCount();
     FbxGeometryElementUV* leUV = fMesh->GetElementUV(0);
+    FbxGeometryElementNormal* leNormal = fMesh->GetElementNormal(0);
+    FbxGeometryElementTangent* leTangent = fMesh->GetElementTangent(0);
+    FbxGeometryElementBinormal* leBiTangent = fMesh->GetElementBinormal(0);
 
     int vertexId = 0;
 
@@ -120,29 +123,38 @@ Mesh* FbxParser::parseMesh(FbxMesh* fMesh)
             mesh->m_vertices.push_back(vert[2]);
 
             int lTextureUVIndex = fMesh->GetTextureUVIndex(i, j);
-            FbxVector2 uv = leUV->GetDirectArray().GetAt(lTextureUVIndex);
 
-            //qDebug() << "uv: " << uv[0] << uv[1];
-            mesh->m_uvs.push_back(uv[0]);
-            mesh->m_uvs.push_back(uv[1]);
+            if (leUV) {
+                FbxVector2 uv = leUV->GetDirectArray().GetAt(lTextureUVIndex);
 
-            FbxVector4 normal = fMesh->GetElementNormal(0)->GetDirectArray().GetAt(vertexId);
-            //qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
-            mesh->m_normals.push_back(normal[0]);
-            mesh->m_normals.push_back(normal[1]);
-            mesh->m_normals.push_back(normal[2]);
+                //qDebug() << "uv: " << uv[0] << uv[1];
+                mesh->m_uvs.push_back(uv[0]);
+                mesh->m_uvs.push_back(uv[1]);
+            }
 
-            FbxVector4 tangent = fMesh->GetElementTangent(0)->GetDirectArray().GetAt(vertexId);
-            //qDebug() << "idx: " << lControlPointIndex <<"tangent: " << tangent[0] << tangent[1] << tangent[2];
-            mesh->m_tangents.push_back(tangent[0]);
-            mesh->m_tangents.push_back(tangent[1]);
-            mesh->m_tangents.push_back(tangent[2]);
+            if (leNormal) {
+                FbxVector4 normal = leNormal->GetDirectArray().GetAt(vertexId);
+                qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
+                mesh->m_normals.push_back(normal[0]);
+                mesh->m_normals.push_back(normal[1]);
+                mesh->m_normals.push_back(normal[2]);
+            }
 
-            FbxVector4 bitangent = fMesh->GetElementBinormal(0)->GetDirectArray().GetAt(vertexId);
-            //qDebug() << "idx: " << lControlPointIndex <<"bitangent: " << bitangent[0] << bitangent[1] << bitangent[2];
-            mesh->m_bitangents.push_back(bitangent[0]);
-            mesh->m_bitangents.push_back(bitangent[1]);
-            mesh->m_bitangents.push_back(bitangent[2]);
+            if (leTangent) {
+                FbxVector4 tangent = leTangent->GetDirectArray().GetAt(vertexId);
+                //qDebug() << "idx: " << lControlPointIndex <<"tangent: " << tangent[0] << tangent[1] << tangent[2];
+                mesh->m_tangents.push_back(tangent[0]);
+                mesh->m_tangents.push_back(tangent[1]);
+                mesh->m_tangents.push_back(tangent[2]);
+            }
+
+            if (leBiTangent) {
+                FbxVector4 bitangent = leBiTangent->GetDirectArray().GetAt(vertexId);
+                //qDebug() << "idx: " << lControlPointIndex <<"bitangent: " << bitangent[0] << bitangent[1] << bitangent[2];
+                mesh->m_bitangents.push_back(bitangent[0]);
+                mesh->m_bitangents.push_back(bitangent[1]);
+                mesh->m_bitangents.push_back(bitangent[2]);
+            }
 
             vertexId++;
         }

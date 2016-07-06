@@ -244,7 +244,8 @@ void Renderer::initializeScene()
 
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
-    const char* myImportFile = "../../objects.fbx";
+    const char* myImportFile = "../../plane.fbx";
+    //const char* myImportFile = "../../objects.fbx";
     //const char* myImportFile = "../../objects_01.fbx";
     //const char* myImportFile = "../../monkey.fbx";
     //const char* myImportFile = "../../cube.fbx";
@@ -272,166 +273,6 @@ void Renderer::initializeScene()
     m_scene = fbxParser.parseScene(lScene);
 
     updateCamera();
-
-
-    FbxNode* lRootNode = lScene->GetRootNode();
-    if(!lRootNode) {
-        return;
-    }
-
-    //for(int i = 0; i < lRootNode->GetChildCount(); i++) {
-    //}
-    FbxNode* pNode = lRootNode->GetChild(0);
-
-    const char* nodeName = pNode->GetName();
-    FbxDouble3 translation = pNode->LclTranslation.Get();
-    FbxDouble3 rotation = pNode->LclRotation.Get();
-    FbxDouble3 scaling = pNode->LclScaling.Get();
-
-    qDebug() << "node name: " << nodeName;
-    qDebug() << "translation: " << QString("%1, %2, %3").arg(translation[0]).arg(translation[1]).arg(translation[2]);
-    qDebug() << "rotation: " << QString("%1, %2, %3").arg(rotation[0]).arg(rotation[1]).arg(rotation[2]);
-    qDebug() << "translation: " << QString("%1, %2, %3").arg(scaling[0]).arg(scaling[1]).arg(scaling[2]);
-
-    for(int i = 0; i < pNode->GetNodeAttributeCount(); i++) {
-        FbxNodeAttribute* pAttribute = pNode->GetNodeAttributeByIndex(i);
-
-        FbxString typeName = GetAttributeTypeName(pAttribute->GetAttributeType());
-        FbxString attrName = pAttribute->GetName();
-
-        qDebug()<< "type: " << typeName.Buffer() << " name: " << attrName.Buffer();
-    }
-
-    FbxMesh* pMesh = pNode->GetMesh();
-
-    if (!pMesh) {
-        return;
-    }
-
-    // build vertex, uv buffers
-    qDebug() << "PolygonCount: " << pMesh->GetPolygonCount();
-    int polygonCount = pMesh->GetPolygonCount();
-    FbxGeometryElementUV* leUV = pMesh->GetElementUV(0);
-
-    int vertexId = 0;
-
-    for (int i = 0; i < polygonCount; i++) {
-
-        int polygonSize = pMesh->GetPolygonSize(i);
-
-        for (int j = 0; j < polygonSize; j++) {
-            int lControlPointIndex = pMesh->GetPolygonVertex(i, j);
-            FbxVector4 vert = pMesh->GetControlPoints()[lControlPointIndex];
-
-            //qDebug() << "vertex: " << vert[0] << vert[1] << vert[2];
-            m_vertices.push_back(vert[0]);
-            m_vertices.push_back(vert[1]);
-            m_vertices.push_back(vert[2]);
-
-            int lTextureUVIndex = pMesh->GetTextureUVIndex(i, j);
-            FbxVector2 uv = leUV->GetDirectArray().GetAt(lTextureUVIndex);
-
-            //qDebug() << "uv: " << uv[0] << uv[1];
-            m_uvs.push_back(uv[0]);
-            m_uvs.push_back(uv[1]);
-
-            FbxVector4 normal = pMesh->GetElementNormal(0)->GetDirectArray().GetAt(vertexId);
-            //qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
-            m_normals.push_back(normal[0]);
-            m_normals.push_back(normal[1]);
-            m_normals.push_back(normal[2]);
-
-            FbxVector4 tangent = pMesh->GetElementTangent(0)->GetDirectArray().GetAt(vertexId);
-            //qDebug() << "idx: " << lControlPointIndex <<"tangent: " << tangent[0] << tangent[1] << tangent[2];
-            m_tangents.push_back(tangent[0]);
-            m_tangents.push_back(tangent[1]);
-            m_tangents.push_back(tangent[2]);
-
-            FbxVector4 bitangent = pMesh->GetElementBinormal(0)->GetDirectArray().GetAt(vertexId);
-            //qDebug() << "idx: " << lControlPointIndex <<"bitangent: " << bitangent[0] << bitangent[1] << bitangent[2];
-            m_bitangents.push_back(bitangent[0]);
-            m_bitangents.push_back(bitangent[1]);
-            m_bitangents.push_back(bitangent[2]);
-
-            vertexId++;
-        }
-    }
-
-    FbxGeometryElementNormal* leNormal = pMesh->GetElementNormal(0);
-    qDebug() << "            Normal: ";
-
-    if(leNormal->GetMappingMode() == FbxGeometryElement::eByPolygonVertex)
-    {
-        switch (leNormal->GetReferenceMode())
-        {
-        case FbxGeometryElement::eDirect:
-            qDebug() << "FbxGeometryElement::eDirect";
-            break;
-        case FbxGeometryElement::eIndexToDirect:
-            {
-            qDebug() << "FbxGeometryElement::eIndexToDirect";
-            }
-            break;
-        default:
-            break; // other reference modes not shown here!
-        }
-    }
-
-    for (int i = 0; i < leNormal->GetDirectArray().GetCount(); i++) {
-        FbxVector4 normal = leNormal->GetDirectArray().GetAt(i);
-        //qDebug() << "idx: " << i << ":" << normal[0] << normal[1] << normal[2];
-    }
-
-
-    // build index buffer
-    int idx = 0;
-
-    for (int i = 0; i < polygonCount; i++) {
-
-        int polygonSize = pMesh->GetPolygonSize(i);
-
-        //qDebug() << "polygonSize: " << polygonSize;
-
-        if (polygonSize == 3) {
-            m_indices.push_back(idx);
-            m_indices.push_back(idx + 1);
-            m_indices.push_back(idx + 2);
-        } else if (polygonSize == 4) {
-            m_indices.push_back(idx);
-            m_indices.push_back(idx + 1);
-            m_indices.push_back(idx + 2);
-
-            m_indices.push_back(idx + 2);
-            m_indices.push_back(idx + 3);
-            m_indices.push_back(idx);
-        }
-
-        idx += polygonSize;
-    }
-
-    // build texture info
-    FbxSurfaceMaterial *lMaterial = pMesh->GetNode()->GetSrcObject<FbxSurfaceMaterial>(0);
-
-    qDebug() << FbxLayerElement::sTextureChannelNames[0];
-    FbxProperty lProperty = lMaterial->FindProperty(FbxLayerElement::sTextureChannelNames[0]);
-    FbxTexture* lTexture = lProperty.GetSrcObject<FbxTexture>(0);
-    FbxFileTexture *lFileTexture = FbxCast<FbxFileTexture>(lTexture);
-
-    if (lFileTexture) {
-        qDebug() << "texture file: " << (char *) lFileTexture->GetFileName();
-        m_textureFile = (char *) lFileTexture->GetFileName();
-    }
-
-    qDebug() << FbxLayerElement::sTextureChannelNames[9];
-    FbxProperty lProperty2 = lMaterial->FindProperty(FbxLayerElement::sTextureChannelNames[9]);
-    FbxTexture* lTexture2 = lProperty2.GetSrcObject<FbxTexture>(0);
-    FbxFileTexture *lFileTexture2 = FbxCast<FbxFileTexture>(lTexture2);
-
-    if (lFileTexture2) {
-        qDebug() << "normalmap file: " << (char *) lFileTexture2->GetFileName();
-        m_normalmapFile = (char *) lFileTexture2->GetFileName();
-    }
-
 }
 
 void Renderer::initializeSurface()
@@ -453,19 +294,6 @@ void Renderer::updateCamera()
 
     m_scene->m_modelMatrix.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
     m_scene->m_modelMatrix.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
-
-//    m_projection.setToIdentity();
-//    m_view.setToIdentity();
-//    m_model.setToIdentity();
-
-//    m_projection.perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
-
-//    m_view.lookAt(QVector3D(0.0f, 0.0f, m_distance),
-//                 QVector3D(0.0f, 0.0f, 0.0f),
-//                 QVector3D(0.0f, 1.0f, 0.0f));
-
-//    m_model.rotate(m_rotationX, 1.0f, 0.0f, 0.0f);
-//    m_model.rotate(m_rotationY, 0.0f, 1.0f, 0.0f);
 }
 
 float Renderer::camRotationX()
@@ -509,21 +337,7 @@ void Renderer::prepareRender()
 {
     updateCamera();
 
-    if (!m_program) {
-        m_program = new QOpenGLShaderProgram();
-//        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, ":/shaders/basic_shading_04.vs");
-//        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment, ":/shaders/basic_shading_04.fs");
-
-//        m_program->bindAttributeLocation("vertices", 0);
-//        m_program->bindAttributeLocation("texCoord", 1);
-//        m_program->bindAttributeLocation("normals", 2);
-//        m_program->bindAttributeLocation("tangents", 3);
-//        m_program->bindAttributeLocation("bitangents", 4);
-//        m_program->link();
-
-//        m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
-//        m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
-
+    if (m_frameBuffer == 0 ) {
         qDebug() << "glBufferData: " << m_indices.size() * 3;
         glGenBuffers(1, &m_elementBuffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
@@ -589,7 +403,7 @@ void Renderer::render()
     glDepthFunc(GL_LESS);
     //glEnable(GL_CULL_FACE);
 
-    glClearColor(0, 0, 1, 1);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_BLEND);

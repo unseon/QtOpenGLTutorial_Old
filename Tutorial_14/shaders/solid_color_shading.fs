@@ -28,7 +28,6 @@ varying highp vec4 fragBitangent;
 uniform sampler2D texture;
 uniform sampler2D normalmap;
 
-uniform vec4 lightDirection;
 uniform mat4 NormalMatrix;
 
 uniform Light light;
@@ -55,7 +54,7 @@ void main() {
 
     vec4 textureColor = material.diffuse;
 
-    float cosTheta = clamp(dot(fragNormal.xyz, -viewL), 0.0, 1.0);
+    float cosTheta = clamp(dot(normalize(fragNormal.xyz), normalize(-viewL)), 0.0, 1.0);
     vec3 viewR = reflect(viewL, fragNormal.xyz);
 
     float cosAlpha = clamp(dot(viewE, viewR), 0.0, 1.0);
@@ -66,6 +65,7 @@ void main() {
 
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
+    Ispec = vec4(0.0, 0.0, 0.0, 0.0);
 
     gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);
 }

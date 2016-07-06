@@ -81,16 +81,27 @@ void Material::activate(Scene* scene)
     }
 
     m_program->enableAttributeArray(0);
-    m_program->enableAttributeArray(1);
-    m_program->enableAttributeArray(2);
-    m_program->enableAttributeArray(3);
-    m_program->enableAttributeArray(4);
-
     m_program->setAttributeArray(0, GL_FLOAT, &m_mesh->m_vertices[0], 3);
-    m_program->setAttributeArray(1, GL_FLOAT, &m_mesh->m_uvs[0], 2);
-    m_program->setAttributeArray(2, GL_FLOAT, &m_mesh->m_normals[0], 3);
-    m_program->setAttributeArray(3, GL_FLOAT, &m_mesh->m_tangents[0], 3);
-    m_program->setAttributeArray(4, GL_FLOAT, &m_mesh->m_bitangents[0], 3);
+
+    if (!m_mesh->m_uvs.empty()) {
+        m_program->enableAttributeArray(1);
+        m_program->setAttributeArray(1, GL_FLOAT, &m_mesh->m_uvs[0], 2);
+    }
+
+    if (!m_mesh->m_normals.empty()) {
+        m_program->enableAttributeArray(2);
+        m_program->setAttributeArray(2, GL_FLOAT, &m_mesh->m_normals[0], 3);
+    }
+
+    if (!m_mesh->m_tangents.empty()) {
+        m_program->enableAttributeArray(3);
+        m_program->setAttributeArray(3, GL_FLOAT, &m_mesh->m_tangents[0], 3);
+    }
+
+    if (!m_mesh->m_bitangents.empty()) {
+        m_program->enableAttributeArray(4);
+        m_program->setAttributeArray(4, GL_FLOAT, &m_mesh->m_bitangents[0], 3);
+    }
 
     QMatrix4x4 model =  scene->m_modelMatrix * m_mesh->m_node->netMatrix();
     //QMatrix4x4 model = scene->m_modelMatrix;
@@ -100,14 +111,17 @@ void Material::activate(Scene* scene)
     QMatrix4x4 mvp = projection * view * model;
     QMatrix4x4 mv = view * model;
     QMatrix4x4 normalMatrix = mv.inverted().transposed();
-    //QMatrix4x4 lightNormalMatrix = view.inverted().transposed();
 
     QVector4D lightDirWorld = scene->m_lightDirWorld.normalized();
-    QVector4D lightDirView = lightDirWorld * normalMatrix;
+    QVector4D lightDirView = (lightDirWorld * normalMatrix).normalized();
 
-    QVector4D up(0.0f, 1.0f, 0.0f, 0.0f);
-    QVector4D up2 = up * normalMatrix;
-    float length = up2.length();
+    QVector4D normal = QVector4D(m_mesh->m_normals[0], m_mesh->m_normals[1], m_mesh->m_normals[2], 0);
+
+    QVector4D nnormal = (normal * normalMatrix).normalized();
+
+    float dot = QVector4D::dotProduct(lightDirView, nnormal);
+
+    qDebug() << "cosTheta: " << dot;
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);

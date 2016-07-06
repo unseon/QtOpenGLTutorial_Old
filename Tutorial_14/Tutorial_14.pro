@@ -32,6 +32,7 @@ HEADERS += \
 
 DISTFILES +=
 
+app_launch_images.files += $$PWD/assets/plane.fbx
 app_launch_images.files += $$PWD/assets/monkey.fbx
 app_launch_images.files += $$PWD/assets/cube.fbx
 app_launch_images.files += $$PWD/assets/solid_cube.fbx
