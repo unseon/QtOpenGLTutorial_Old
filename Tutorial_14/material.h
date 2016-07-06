@@ -15,8 +15,6 @@ public:
 
     Mesh* m_mesh;
 
-    QVector4D m_diffuseColor;
-
     QString m_textureFile;
     QString m_normalmapFile;
 

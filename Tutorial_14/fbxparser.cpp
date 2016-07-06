@@ -65,6 +65,11 @@ Node* FbxParser::parseNode(FbxNode* fNode)
     node->m_rotation = QVector3D(rotation[0], rotation[1], rotation[2]);
     node->m_scale = QVector3D(scaling[0], scaling[1], scaling[2]);
 
+    qDebug() << "m_name" << node->m_name;
+    qDebug() << "m_position" << node->m_position;
+    qDebug() << "m_rotation" << node->m_rotation;
+    qDebug() << "m_scale" << node->m_scale;
+
     for(int i = 0; i < fNode->GetNodeAttributeCount(); i++) {
         FbxNodeAttribute* pAttribute = fNode->GetNodeAttributeByIndex(i);
 

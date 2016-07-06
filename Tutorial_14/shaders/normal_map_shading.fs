@@ -71,8 +71,6 @@ void main() {
 
     float cosAlpha = clamp(dot(tangentE, tangentR), 0.0, 1.0);
 
-    vec4 Iamb = 0.5 * (light.ambient + textureColor * length(light.ambient) * 0.333);
-
     vec4 Idiff = textureColor * cosTheta;
 
     Idiff = clamp(Idiff, 0.0, 1.0);
@@ -80,5 +78,5 @@ void main() {
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 
-    gl_FragColor = vec4((scene.backgroundColor + Iamb + Idiff + Ispec).xyz, material.opacity);
+    gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);
 }

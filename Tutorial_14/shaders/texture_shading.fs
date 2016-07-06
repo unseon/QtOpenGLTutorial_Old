@@ -50,17 +50,21 @@ highp mat3 transpose(in highp mat3 inMatrix) {
 }
 
 void main() {
-    vec3 L = -light.direction.xyz;
-    vec3 E = normalize(-fragVertex).xyz;
-    vec3 R = normalize(-reflect(L, fragNormal.xyz)).xyz;
+    vec3 viewL = light.direction.xyz;
+    vec3 viewE = normalize(-fragVertex).xyz;
 
     vec4 textureColor = texture2D(texture, texc);
 
-    vec4 Idiff = textureColor * max(dot(fragNormal.xyz,L), 0.0);
+    float cosTheta = clamp(dot(fragNormal.xyz, -viewL), 0.0, 1.0);
+    vec3 viewR = reflect(viewL, fragNormal.xyz);
+
+    float cosAlpha = clamp(dot(viewE, viewR), 0.0, 1.0);
+
+    vec4 Idiff = textureColor * cosTheta;
+
     Idiff = clamp(Idiff, 0.0, 1.0);
 
-    vec4 Ispec = light.specular
-                * pow(max(dot(R,E),0.0), material.shininess);
+    vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 
     gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);

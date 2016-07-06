@@ -185,8 +185,10 @@ Renderer::Renderer()
     : m_program(0),
       m_surfaceProgram(0),
       m_texture(0),
-      m_rotationX(45.0f),
-      m_rotationY(45.0f),
+//      m_rotationX(45.0f),
+//      m_rotationY(45.0f),
+      m_rotationX(0.0f),
+      m_rotationY(0.0f),
       m_distance(10.0f),
       m_surface(300, 200, QImage::QImage::Format_ARGB32),
       m_data(0),
@@ -243,8 +245,10 @@ void Renderer::initializeScene()
     FbxImporter* myImporter = FbxImporter::Create(mySdkManager, "");
 
     const char* myImportFile = "../../objects.fbx";
+    //const char* myImportFile = "../../objects_01.fbx";
     //const char* myImportFile = "../../monkey.fbx";
     //const char* myImportFile = "../../cube.fbx";
+    //const char* myImportFile = "../../solid_cube.fbx";
 
     QFile file(myImportFile);
 
@@ -441,7 +445,7 @@ void Renderer::updateCamera()
     m_scene->m_viewMatrix.setToIdentity();
     m_scene->m_modelMatrix.setToIdentity();
 
-    m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 100.0f);
+    m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
 
     m_scene->m_viewMatrix.lookAt(QVector3D(0.0f, 0.0f, m_distance),
                  QVector3D(0.0f, 0.0f, 0.0f),

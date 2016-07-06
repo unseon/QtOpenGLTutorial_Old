@@ -23,18 +23,22 @@ Material::Material()
 
 void Material::init()
 {
-    m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
-    m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
-    m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
-
-    m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
-    m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
-    m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
-
-    if (m_texture != NULL && m_normalmap !=NULL) {
+    if (!m_textureFile.isEmpty() && !m_normalmapFile.isEmpty()) {
         m_shaderName = "normal_map_shading";
-    } else if (m_texture != NULL) {
+
+        m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
+        m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
+        m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
+
+        m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
+        m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
+        m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
+    } else if (!m_textureFile.isEmpty()) {
         m_shaderName = "texture_shading";
+
+        m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
+        m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
+        m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
     } else {
         m_shaderName = "solid_color_shading";
     }
@@ -66,11 +70,15 @@ void Material::activate(Scene* scene)
 
     m_program->bind();
 
-    m_program->setUniformValue("texture", 0);
-    m_texture->bind(0);
+    if (!m_textureFile.isEmpty()) {
+        m_program->setUniformValue("texture", 0);
+        m_texture->bind(0);
+    }
 
-    m_program->setUniformValue("normalmap", 1);
-    m_normalmap->bind(1);
+    if (!m_normalmapFile.isEmpty()) {
+        m_program->setUniformValue("normalmap", 1);
+        m_normalmap->bind(1);
+    }
 
     m_program->enableAttributeArray(0);
     m_program->enableAttributeArray(1);
@@ -96,6 +104,10 @@ void Material::activate(Scene* scene)
 
     QVector4D lightDirWorld = scene->m_lightDirWorld.normalized();
     QVector4D lightDirView = lightDirWorld * normalMatrix;
+
+    QVector4D up(0.0f, 1.0f, 0.0f, 0.0f);
+    QVector4D up2 = up * normalMatrix;
+    float length = up2.length();
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);
