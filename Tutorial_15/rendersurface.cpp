@@ -367,6 +367,24 @@ void Renderer::prepareRender()
         glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
         //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 300, 200);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
+
+
+
+
+        //shadow map initialize
+        glGenFramebuffers(1, &m_shadowMapFrameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFrameBuffer);
+
+        // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
+        glGenTextures(1, &m_shadowMapTexture);
+        glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_shadowMapTexture, 0);
     }
 
     if (m_isViewportDirty) {

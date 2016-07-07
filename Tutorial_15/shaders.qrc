@@ -6,5 +6,7 @@
         <file>shaders/texture_shading.vs</file>
         <file>shaders/normal_map_shading.fs</file>
         <file>shaders/normal_map_shading.vs</file>
+        <file>shaders/shadow_map_shading.fs</file>
+        <file>shaders/shadow_map_shading.vs</file>
     </qresource>
 </RCC>
