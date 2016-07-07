@@ -1,15 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>shaders/basic_shading.vs</file>
-        <file>shaders/basic_shading.fs</file>
-        <file>shaders/basic_shading_02.vs</file>
-        <file>shaders/basic_shading_02.fs</file>
-        <file>shaders/basic_shading_03.fs</file>
-        <file>shaders/basic_shading_03.vs</file>
-        <file>shaders/basic_shading_04.fs</file>
-        <file>shaders/basic_shading_04.vs</file>
-        <file>shaders/surface_shading.fs</file>
-        <file>shaders/surface_shading.vs</file>
         <file>shaders/solid_color_shading.fs</file>
         <file>shaders/solid_color_shading.vs</file>
         <file>shaders/texture_shading.fs</file>
