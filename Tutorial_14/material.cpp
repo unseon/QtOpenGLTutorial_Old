@@ -113,15 +113,7 @@ void Material::activate(Scene* scene)
     QMatrix4x4 normalMatrix = mv.inverted().transposed();
 
     QVector4D lightDirWorld = scene->m_lightDirWorld.normalized();
-    QVector4D lightDirView = (lightDirWorld * normalMatrix).normalized();
-
-    QVector4D normal = QVector4D(m_mesh->m_normals[0], m_mesh->m_normals[1], m_mesh->m_normals[2], 0);
-
-    QVector4D nnormal = (normal * normalMatrix).normalized();
-
-    float dot = QVector4D::dotProduct(lightDirView, nnormal);
-
-    qDebug() << "cosTheta: " << dot;
+    QVector4D lightDirView = (normalMatrix * lightDirWorld).normalized();
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);

@@ -50,13 +50,14 @@ highp mat3 transpose(in highp mat3 inMatrix) {
 }
 
 void main() {
-    vec3 viewL = light.direction.xyz;
-    vec3 viewE = normalize(-fragVertex).xyz;
+    vec3 viewL = normalize(light.direction.xyz);
+    vec3 viewE = normalize(-fragVertex.xyz);
+    vec3 viewN = normalize(fragNormal.xyz);
 
     vec4 textureColor = texture2D(texture, texc);
 
-    float cosTheta = clamp(dot(fragNormal.xyz, -viewL), 0.0, 1.0);
-    vec3 viewR = reflect(viewL, fragNormal.xyz);
+    float cosTheta = clamp(dot(viewN, -viewL), 0.0, 1.0);
+    vec3 viewR = reflect(viewL, viewN);
 
     float cosAlpha = clamp(dot(viewE, viewR), 0.0, 1.0);
 
