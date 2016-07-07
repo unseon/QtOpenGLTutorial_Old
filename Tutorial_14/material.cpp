@@ -103,17 +103,18 @@ void Material::activate(Scene* scene)
         m_program->setAttributeArray(4, GL_FLOAT, &m_mesh->m_bitangents[0], 3);
     }
 
-    QMatrix4x4 model =  scene->m_modelMatrix * m_mesh->m_node->netMatrix();
+    QMatrix4x4 localToWorld =  scene->m_modelMatrix * m_mesh->m_node->netMatrix();
+    QMatrix4x4 model = scene->m_modelMatrix;
     //QMatrix4x4 model = scene->m_modelMatrix;
     QMatrix4x4 view = scene->m_viewMatrix;
     QMatrix4x4 projection = scene->m_projectionMatrix;
 
-    QMatrix4x4 mvp = projection * view * model;
-    QMatrix4x4 mv = view * model;
+    QMatrix4x4 mvp = projection * view * localToWorld;
+    QMatrix4x4 mv = view * localToWorld;
     QMatrix4x4 normalMatrix = mv.inverted().transposed();
 
     QVector4D lightDirWorld = scene->m_lightDirWorld.normalized();
-    QVector4D lightDirView = (normalMatrix * lightDirWorld).normalized();
+    QVector4D lightDirView = (model * lightDirWorld).normalized();
 
     m_program->setUniformValue("MVP", mvp);
     m_program->setUniformValue("MV", mv);

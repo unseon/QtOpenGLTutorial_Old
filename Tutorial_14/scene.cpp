@@ -10,7 +10,7 @@ Scene::Scene()
     //m_lightDiffuseColor = QVector4D(0.8f, 0.8f, 0.8f, 1.0f);
     m_lightSpecularColor = QVector4D(0.8f, 0.8f, 0.8f, 1.0f);
 
-    m_lightDirWorld = QVector4D (1, 1, -1, 0);
+    m_lightDirWorld = QVector4D (1, -1, -1, 0);
 }
 
 void Scene::render()
