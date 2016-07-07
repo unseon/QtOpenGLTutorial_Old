@@ -7,6 +7,7 @@
 #include <QVector4D>
 
 class Node;
+class Material;
 
 class Scene
 {
@@ -25,7 +26,7 @@ public:
     QMatrix4x4 m_viewMatrix;
     QMatrix4x4 m_modelMatrix;
 
-    void render();
+    void render(Material* mateiral = 0);
 };
 
 #endif // SCENE_H

@@ -1,6 +1,7 @@
 #include "scene.h"
 
 #include "node.h"
+#include "material.h"
 
 Scene::Scene()
     : m_root(0)
@@ -13,9 +14,9 @@ Scene::Scene()
     m_lightDirWorld = QVector4D (1, -1, -1, 0);
 }
 
-void Scene::render()
+void Scene::render(Material* material)
 {
     if (m_root) {
-        m_root->render(this);
+        m_root->render(this, material);
     }
 }

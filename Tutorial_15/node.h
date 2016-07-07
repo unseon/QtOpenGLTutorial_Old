@@ -9,6 +9,7 @@
 
 class Mesh;
 class Scene;
+class Material;
 
 using std::vector;
 
@@ -30,15 +31,15 @@ public:
 
     Mesh* m_mesh;
 
-    void render(Scene* scene);
+    void render(Scene* scene, Material* material = 0);
     QMatrix4x4 netMatrix();
 
     void updateMatrix();
     void addChild(Node* node);
 
 protected:
-    void renderSelf(Scene* scene);
-    void renderChildren(Scene* scene);
+    void renderSelf(Scene* scene, Material* material = 0);
+    void renderChildren(Scene* scene, Material* material = 0);
 };
 
 #endif // NODE_H

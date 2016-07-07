@@ -6,41 +6,45 @@
 #include "node.h"
 #include "mesh.h"
 
-Material::Material()
+Material::Material(const QString &shaderName)
     : m_program(0),
       m_texture(0),
-      m_normalmap(0)
+      m_normalmap(0),
+      m_shaderName(shaderName)
 {
     m_shininess = 0.5f;
     m_opacity = 1.0f;
     m_diffuse = QVector4D(0.5f, 0.5f, 0.5f, 1.0f);
     m_specular = QVector4D(0.8f, 0.8f, 0.8f, 1.0f);
 
-    m_shaderName = "solid_color_shading";
+    //m_shaderName = "solid_color_shading";
     //m_shaderName = "normal_map_shading";
     //m_shaderName = "texture_shading";
 }
 
 void Material::init()
 {
-    if (!m_textureFile.isEmpty() && !m_normalmapFile.isEmpty()) {
-        m_shaderName = "normal_map_shading";
+    if (m_shaderName.isEmpty()) {
 
-        m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
-        m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
-        m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
+        if (!m_textureFile.isEmpty() && !m_normalmapFile.isEmpty()) {
+            m_shaderName = "normal_map_shading";
 
-        m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
-        m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
-        m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
-    } else if (!m_textureFile.isEmpty()) {
-        m_shaderName = "texture_shading";
+            m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
+            m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
+            m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
 
-        m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
-        m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
-        m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
-    } else {
-        m_shaderName = "solid_color_shading";
+            m_normalmap = new QOpenGLTexture(QImage(m_normalmapFile).mirrored());
+            m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
+            m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
+        } else if (!m_textureFile.isEmpty()) {
+            m_shaderName = "texture_shading";
+
+            m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
+            m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
+            m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
+        } else {
+            m_shaderName = "solid_color_shading";
+        }
     }
 
     QString vertexShaderPath = m_shaderName;

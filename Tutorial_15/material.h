@@ -12,7 +12,7 @@ class Mesh;
 class Material
 {
 public:
-    Material();
+    Material(const QString &shaderName = "");
 
     QString m_textureFile;
     QString m_normalmapFile;

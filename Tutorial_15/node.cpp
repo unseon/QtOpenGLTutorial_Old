@@ -2,6 +2,7 @@
 
 #include "mesh.h"
 #include "scene.h"
+#include "material.h"
 
 
 Node::Node(Node* parent)
@@ -16,26 +17,26 @@ void Node::addChild(Node* node)
     node->m_parent = this;
 }
 
-void Node::render(Scene* scene)
+void Node::render(Scene* scene, Material* material)
 {
-    renderSelf(scene);
+    renderSelf(scene, material);
 
-    renderChildren(scene);
+    renderChildren(scene, material);
 }
 
-void Node::renderSelf(Scene* scene)
+void Node::renderSelf(Scene* scene, Material* material)
 {
     updateMatrix();
 
     if (m_mesh != NULL) {
-        m_mesh->draw(scene);
+        m_mesh->draw(scene, material);
     }
 }
 
-void Node::renderChildren(Scene* scene)
+void Node::renderChildren(Scene* scene, Material* material)
 {
     for(int i = 0; i < m_children.size(); i++) {
-        m_children[i]->render(scene);
+        m_children[i]->render(scene, material);
     }
 }
 

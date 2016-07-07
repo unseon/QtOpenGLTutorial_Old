@@ -16,6 +16,7 @@
 
 #include "scene.h"
 #include "fbxparser.h"
+#include "material.h"
 
 using std::vector;
 using std::floor;
@@ -282,11 +283,8 @@ void Renderer::initializeSurface()
 
 void Renderer::updateCamera()
 {
-    m_scene->m_projectionMatrix.setToIdentity();
     m_scene->m_viewMatrix.setToIdentity();
     m_scene->m_modelMatrix.setToIdentity();
-
-    m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
 
     m_scene->m_viewMatrix.lookAt(QVector3D(0.0f, 0.0f, m_distance),
                  QVector3D(0.0f, 0.0f, 0.0f),
@@ -378,7 +376,7 @@ void Renderer::prepareRender()
         // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
         glGenTextures(1, &m_shadowMapTexture);
         glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, 1024, 1024, 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, m_viewportSize.width(), m_viewportSize.height(), 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -393,6 +391,10 @@ void Renderer::prepareRender()
         glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
         //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
+        //glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, m_viewportSize.width(), m_viewportSize.height(), 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
         glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, m_viewportSize.width(), m_viewportSize.height());
@@ -415,7 +417,6 @@ void Renderer::render()
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
-    //glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -427,74 +428,20 @@ void Renderer::render()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+//    if (m_scene) {
+//        m_scene->m_projectionMatrix.setToIdentity();
+//        m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
+//        m_scene->render();
+//    }
+
     if (m_scene) {
-        m_scene->render();
+        Material shadowMapMaterial("shadow_map_shading");
+
+        m_scene->m_projectionMatrix.setToIdentity();
+        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 20);
+        m_scene->render(&shadowMapMaterial);
     }
 
-
-//    m_program->bind();
-
-//    m_program->setUniformValue("texture", 0);
-//    m_texture->bind(0);
-
-//    m_program->setUniformValue("normalmap", 1);
-//    m_normalmap->bind(1);
-
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-//    m_program->enableAttributeArray(0);
-//    m_program->enableAttributeArray(1);
-//    m_program->enableAttributeArray(2);
-//    m_program->enableAttributeArray(3);
-//    m_program->enableAttributeArray(4);
-
-//    m_program->setAttributeArray(0, GL_FLOAT, &m_vertices[0], 3);
-//    m_program->setAttributeArray(1, GL_FLOAT, &m_uvs[0], 2);
-//    m_program->setAttributeArray(2, GL_FLOAT, &m_normals[0], 3);
-//    m_program->setAttributeArray(3, GL_FLOAT, &m_tangents[0], 3);
-//    m_program->setAttributeArray(4, GL_FLOAT, &m_bitangents[0], 3);
-
-//    QMatrix4x4 mvp = m_projection * m_view * m_model;
-//    QMatrix4x4 mv = m_view * m_model;
-//    QMatrix4x4 normalMatrix = mv.inverted().transposed();
-//    QMatrix4x4 lightNormalMatrix = m_view.inverted().transposed();
-
-//    QVector4D light_dir_world(1, -1, -1, 0);
-
-//    light_dir_world.normalize();
-//    QVector4D light_dir_view = light_dir_world * lightNormalMatrix;
-
-//    QVector4D sceneBackgroundColor(0.0f, 0.0f, 0.0f, 1.0f);
-//    QVector4D lightAmbientColor(0.1f, 0.1f, 0.1f, 1.0f);
-//    QVector4D lightDiffuseColor(0.8f, 0.8f, 0.8f, 1.0f);
-//    QVector4D lightSpecularColor(0.8f, 0.8f, 0.8f, 1.0f);
-//    float materialShininess = 0.5f;
-//    float materialOpacity = 1.0f;
-
-//    m_program->setUniformValue("MVP", mvp);
-//    m_program->setUniformValue("MV", mv);
-//    m_program->setUniformValue("NormalMatrix", normalMatrix);
-
-//    m_program->setUniformValue("light.ambient", lightAmbientColor);
-//    //m_program->setUniformValue("light.diffuse", lightDiffuseColor);
-//    m_program->setUniformValue("light.specular", lightSpecularColor);
-//    m_program->setUniformValue("material.shininess", materialShininess);
-//    m_program->setUniformValue("material.opacity", materialOpacity);
-
-//    m_program->setUniformValue("light.direction", light_dir_view);
-
-//    m_program->setUniformValue("scene.backgroundColor", sceneBackgroundColor);
-
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
-//    glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, (void*)0);
-
-//    m_program->disableAttributeArray(0);
-//    m_program->disableAttributeArray(1);
-//    m_program->disableAttributeArray(2);
-//    m_program->disableAttributeArray(3);
-//    m_program->disableAttributeArray(4);
-//    m_program->release();
 
     // bitblt to m_surface
     glActiveTexture(GL_TEXTURE0);
@@ -502,4 +449,46 @@ void Renderer::render()
     glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
+
+
+
+//    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFrameBuffer);
+//    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
+
+//    glEnable(GL_DEPTH_TEST);
+//    glDepthFunc(GL_LESS);
+//    //glEnable(GL_CULL_FACE);
+
+//    glClearColor(0, 0, 0, 1);
+//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+////    glEnable(GL_BLEND);
+////    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+//    if (m_scene) {
+//        Material shadowMapMaterial("shadow_map_shading");
+
+
+//        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 20);
+//        m_scene->render(&shadowMapMaterial);
+//    }
+
+//    // bitblt to m_surface
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
+
+//    float* depthData = new float[m_viewportSize.width() * m_viewportSize.height()];
+
+//    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+
+
+////    for (int i = 0; i < m_viewportSize.width() * m_viewportSize.height(); i++) {
+////        //qDebug() << depthData[i] * 255;
+////        m_data[i * 4] = depthData[i] * 255;
+////        m_data[i * 4 + 1] = depthData[i] * 255;
+////        m_data[i * 4 + 2] = depthData[i] * 255;
+////        m_data[i * 4 + 3] = 255;
+////    }
+
+//    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
 }
