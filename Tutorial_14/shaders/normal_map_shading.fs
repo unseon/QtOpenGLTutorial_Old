@@ -2,8 +2,8 @@ struct Light {
     vec4 ambient;
     vec4 diffuse;
     vec4 specular;
-    vec4 position;
-    vec4 direction;
+    vec3 position;
+    vec3 direction;
 };
 
 struct Material {
@@ -20,15 +20,14 @@ struct Scene {
 };
 
 varying mediump vec2 texc;
-varying highp vec4 fragVertex;
-varying highp vec4 fragNormal;
-varying highp vec4 fragTangent;
-varying highp vec4 fragBitangent;
+varying highp vec3 fragVertex;
+varying highp vec3 fragNormal;
+varying highp vec3 fragTangent;
+varying highp vec3 fragBitangent;
 
 uniform sampler2D texture;
 uniform sampler2D normalmap;
 
-uniform vec4 lightDirection;
 uniform mat4 NormalMatrix;
 
 uniform Light light;
@@ -50,31 +49,26 @@ highp mat3 transpose(in highp mat3 inMatrix) {
 }
 
 void main() {
-    vec3 viewL = light.direction.xyz;
-    vec3 viewE = normalize(-fragVertex).xyz;
-
+    vec3 viewL = light.direction;
+    vec3 viewE = normalize(-fragVertex);
     vec3 tangentN = normalize(texture2D( normalmap, texc).rgb * 2.0 - 1.0);
 
     mat3 TBN = transpose(mat3(
-                fragTangent.xyz,
-                fragBitangent.xyz,
-                fragNormal.xyz
+                fragTangent,
+                fragBitangent,
+                fragNormal
                 ));
 
     vec3 tangentL = normalize(TBN * viewL);
     vec3 tangentE = normalize(TBN * viewE);
-
-    vec4 textureColor = texture2D(texture, texc);
-
-    float cosTheta = clamp(dot(tangentN, -tangentL), 0.0, 1.0);
     vec3 tangentR = reflect(tangentL, tangentN);
 
-    float cosAlpha = clamp(dot(tangentE, tangentR), 0.0, 1.0);
-
-    vec4 Idiff = textureColor * cosTheta;
-
+    vec4 diffColor = texture2D(texture, texc);
+    float cosTheta = clamp(dot(tangentN, -tangentL), 0.0, 1.0);
+    vec4 Idiff = diffColor * cosTheta;
     Idiff = clamp(Idiff, 0.0, 1.0);
 
+    float cosAlpha = clamp(dot(tangentE, tangentR), 0.0, 1.0);
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 

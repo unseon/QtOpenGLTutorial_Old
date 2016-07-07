@@ -130,7 +130,7 @@ void Material::activate(Scene* scene)
     m_program->setUniformValue("material.shininess", m_shininess);
     m_program->setUniformValue("material.opacity", m_opacity);
 
-    m_program->setUniformValue("light.direction", lightDirView);
+    m_program->setUniformValue("light.direction", QVector3D(lightDirView).normalized());
 
     m_program->setUniformValue("scene.backgroundColor", scene->m_backgroundColor);
 }
