@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/solid_color_shading.fs</file>
+        <file>shaders/solid_color_shading.vs</file>
+        <file>shaders/texture_shading.fs</file>
+        <file>shaders/texture_shading.vs</file>
+        <file>shaders/normal_map_shading.fs</file>
+        <file>shaders/normal_map_shading.vs</file>
+    </qresource>
+</RCC>
