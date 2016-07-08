@@ -12,6 +12,7 @@ Scene::Scene()
     m_lightSpecularColor = QVector4D(0.8f, 0.8f, 0.8f, 1.0f);
 
     m_lightDirWorld = QVector4D (1, -1, -1, 0);
+    m_lightPosition = QVector4D (-10, 10, 10);
 }
 
 void Scene::render(Material* material)

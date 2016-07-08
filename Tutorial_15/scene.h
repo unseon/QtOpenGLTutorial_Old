@@ -19,6 +19,7 @@ public:
     QVector4D m_lightAmbientColor;
     QVector4D m_lightSpecularColor;
     QVector4D m_lightDirWorld;
+    QVector4D m_lightPosition;
 
     QVector4D m_backgroundColor;
 

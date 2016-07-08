@@ -196,7 +196,9 @@ Renderer::Renderer()
     　m_frameBuffer(0),
     m_renderedTexture(0),
     m_depthRenderBuffer(0),
-    m_scene(0)
+    m_scene(0),
+    m_shadowMapFrameBuffer(0),
+    m_shadowMapTexture(0)
 {
     initializeOpenGLFunctions();
 
@@ -341,6 +343,8 @@ void Renderer::prepareRender()
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), m_indices.data(), GL_STATIC_DRAW);
 
+
+        // frame buffer initialize
         glGenFramebuffers(1, &m_frameBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
 
@@ -361,11 +365,11 @@ void Renderer::prepareRender()
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, DrawBuffers);
 
+
         glGenRenderbuffers(1, &m_depthRenderBuffer);
         glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
         //glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 300, 200);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
-
+        //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
 
 
 
@@ -376,13 +380,16 @@ void Renderer::prepareRender()
         // Depth texture. Slower than a depth buffer, but you can sample it later in your shader
         glGenTextures(1, &m_shadowMapTexture);
         glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, m_viewportSize.width(), m_viewportSize.height(), 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_shadowMapTexture, 0);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_shadowMapTexture, 0);
+        glDrawBuffers(1, DrawBuffers);
+
+
     }
 
     if (m_isViewportDirty) {
@@ -415,44 +422,9 @@ void Renderer::render()
 
     prepareRender();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
-    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
+//    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    //glEnable(GL_CULL_FACE);
-
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-//    if (m_scene) {
-//        m_scene->m_projectionMatrix.setToIdentity();
-//        m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
-//        m_scene->render();
-//    }
-
-    if (m_scene) {
-        Material shadowMapMaterial("shadow_map_shading");
-
-        m_scene->m_projectionMatrix.setToIdentity();
-        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 20);
-        m_scene->render(&shadowMapMaterial);
-    }
-
-
-    // bitblt to m_surface
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
-    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
-
-    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
-
-
-
-//    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFrameBuffer);
 //    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
 
 //    glEnable(GL_DEPTH_TEST);
@@ -462,24 +434,60 @@ void Renderer::render()
 //    glClearColor(0, 0, 0, 1);
 //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-////    glEnable(GL_BLEND);
-////    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+////    if (m_scene) {
+////        m_scene->m_projectionMatrix.setToIdentity();
+////        m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
+////        m_scene->render();
+////    }
 
 //    if (m_scene) {
 //        Material shadowMapMaterial("shadow_map_shading");
 
-
+//        m_scene->m_projectionMatrix.setToIdentity();
 //        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 20);
 //        m_scene->render(&shadowMapMaterial);
 //    }
 
+
 //    // bitblt to m_surface
 //    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
-
-//    float* depthData = new float[m_viewportSize.width() * m_viewportSize.height()];
-
+//    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 //    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+
+//    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
+
+
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_shadowMapFrameBuffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
+
+    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    //glEnable(GL_CULL_FACE);
+
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (m_scene) {
+        Material shadowMapMaterial("shadow_map_shading");
+
+        m_scene->m_projectionMatrix.setToIdentity();
+        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 20);
+        m_scene->render(&shadowMapMaterial);
+    }
+
+    // bitblt to m_surface
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_shadowMapTexture);
+
+    //float* depthData = new float[m_viewportSize.width() * m_viewportSize.height()];
+
+    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
 
 
 ////    for (int i = 0; i < m_viewportSize.width() * m_viewportSize.height(); i++) {
@@ -490,5 +498,5 @@ void Renderer::render()
 ////        m_data[i * 4 + 3] = 255;
 ////    }
 
-//    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
+    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
 }

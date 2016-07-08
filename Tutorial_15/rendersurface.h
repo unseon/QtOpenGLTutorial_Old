@@ -65,6 +65,7 @@ private:
 
     GLuint m_shadowMapFrameBuffer;
     GLuint m_shadowMapTexture;
+    GLuint m_shadowMapDepthBuffer;
 
 
     bool m_isViewportDirty;
