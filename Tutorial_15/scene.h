@@ -16,6 +16,8 @@ public:
 
     Node* m_root;
 
+    Node* m_mainLight;
+
     QVector4D m_lightAmbientColor;
     QVector4D m_lightSpecularColor;
     QVector4D m_lightDirWorld;

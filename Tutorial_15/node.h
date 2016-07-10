@@ -8,6 +8,7 @@
 
 
 class Mesh;
+class DirectionalLight;
 class Scene;
 class Material;
 
@@ -30,6 +31,7 @@ public:
     vector<Node*> m_children;
 
     Mesh* m_mesh;
+    DirectionalLight* m_light;
 
     void render(Scene* scene, Material* material = 0);
     QMatrix4x4 netMatrix();

@@ -9,7 +9,8 @@ SOURCES += main.cpp \
     mesh.cpp \
     material.cpp \
     scene.cpp \
-    fbxparser.cpp
+    fbxparser.cpp \
+    directionallight.cpp
 
 RESOURCES += qml.qrc \
     textures.qrc \
@@ -28,7 +29,8 @@ HEADERS += \
     mesh.h \
     material.h \
     scene.h \
-    fbxparser.h
+    fbxparser.h \
+    directionallight.h
 
 DISTFILES +=
 

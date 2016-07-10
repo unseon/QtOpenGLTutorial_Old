@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "node.h"
 #include "mesh.h"
+#include "directionallight.h"
 
 FbxParser::FbxParser(QObject *parent) : QObject(parent)
 {
@@ -38,14 +39,15 @@ FbxString FbxParser::GetAttributeTypeName(FbxNodeAttribute::EType type) {
 
 Scene* FbxParser::parseScene(FbxScene* fScene)
 {
-    Scene* scene = new Scene();
+    m_scene = new Scene();
+
     FbxNode* fRootNode = fScene->GetRootNode();
 
     if (fRootNode) {
-        scene->m_root = parseNode(fRootNode);
+        m_scene->m_root = parseNode(fRootNode);
     }
 
-    return scene;
+    return m_scene;
 }
 
 Node* FbxParser::parseNode(FbxNode* fNode)
@@ -79,11 +81,16 @@ Node* FbxParser::parseNode(FbxNode* fNode)
         qDebug()<< "type: " << typeName.Buffer() << " name: " << attrName.Buffer();
     }
 
-    FbxMesh* fMesh = fNode->GetMesh();
-
-    if (fMesh != NULL) {
-        node->m_mesh = parseMesh(fMesh);
+    if (fNode->GetMesh()) {
+        node->m_mesh = parseMesh(fNode->GetMesh());
         node->m_mesh->m_node = node;
+    } else if (fNode->GetLight()) {
+        qDebug() << "Directional Light";
+        node->m_light = parseLight(fNode->GetLight());
+
+        if (m_scene->m_mainLight == NULL) {
+            m_scene->m_mainLight = node;
+        }
     }
 
     for (int i = 0; i < fNode->GetChildCount(); i++) {
@@ -93,6 +100,15 @@ Node* FbxParser::parseNode(FbxNode* fNode)
     }
 
     return node;
+}
+
+DirectionalLight* FbxParser::parseLight(FbxLight *fLight)
+{
+    DirectionalLight* light = new DirectionalLight();
+
+    int lightType = fLight->LightType.Get();
+    FbxDouble3 c = fLight->Color.Get();
+    light->m_color = QVector4D(c[0], c[1], c[2], 1.0f);
 }
 
 Mesh* FbxParser::parseMesh(FbxMesh* fMesh)
@@ -134,7 +150,7 @@ Mesh* FbxParser::parseMesh(FbxMesh* fMesh)
 
             if (leNormal) {
                 FbxVector4 normal = leNormal->GetDirectArray().GetAt(vertexId);
-                qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
+                //qDebug() << "idx: " << lControlPointIndex <<"normal: " << normal[0] << normal[1] << normal[2];
                 mesh->m_normals.push_back(normal[0]);
                 mesh->m_normals.push_back(normal[1]);
                 mesh->m_normals.push_back(normal[2]);

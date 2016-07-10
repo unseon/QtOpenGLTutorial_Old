@@ -476,8 +476,8 @@ void Renderer::render()
     if (m_scene) {
         Material shadowMapMaterial("shadow_map_shading");
 
-        m_scene->m_projectionMatrix.setToIdentity();
-        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 20);
+//        m_scene->m_projectionMatrix.setToIdentity();
+//        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 100);
         m_scene->render(&shadowMapMaterial);
     }
 

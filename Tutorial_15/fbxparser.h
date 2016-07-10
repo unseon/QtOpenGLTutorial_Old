@@ -8,6 +8,7 @@ class Scene;
 class Node;
 class Mesh;
 class Material;
+class DirectionalLight;
 
 class FbxParser : public QObject
 {
@@ -19,9 +20,13 @@ public:
     Node* parseNode(FbxNode* node);
     Mesh* parseMesh(FbxMesh* mesh);
     Material* parseMaterial(FbxSurfaceMaterial *fMaterial);
-    Scene* parseScene(FbxScene* scene);
+    DirectionalLight* parseLight(FbxLight* fLght);
+    Scene* parseScene(FbxScene* fScene);
 
     static FbxString GetAttributeTypeName(FbxNodeAttribute::EType type);
+
+private:
+    Scene* m_scene;
 
 signals:
 
