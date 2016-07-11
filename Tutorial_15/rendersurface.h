@@ -63,11 +63,6 @@ private:
     GLuint m_renderedTexture;
     GLuint m_depthRenderBuffer;
 
-    GLuint m_shadowMapFrameBuffer;
-    GLuint m_shadowMapTexture;
-    GLuint m_shadowMapDepthBuffer;
-
-
     bool m_isViewportDirty;
 
     void prepareRender();

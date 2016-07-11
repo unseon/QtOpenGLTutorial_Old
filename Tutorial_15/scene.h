@@ -8,6 +8,7 @@
 
 class Node;
 class Material;
+class DirectionalLight;
 
 class Scene
 {

@@ -2,6 +2,7 @@
 
 #include "node.h"
 #include "material.h"
+#include "directionallight.h"
 
 Scene::Scene()
     : m_root(0),
@@ -54,6 +55,6 @@ void Scene::render(Material* material)
     if (m_root) {
 //        m_viewMatrix = viewMatrix;
 //        m_projectionMatrix = projectionMatrix;
-        m_root->render(this);
+        m_root->render(this, material);
     }
 }
