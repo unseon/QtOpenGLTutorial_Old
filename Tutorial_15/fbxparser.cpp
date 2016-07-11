@@ -109,6 +109,8 @@ DirectionalLight* FbxParser::parseLight(FbxLight *fLight)
     int lightType = fLight->LightType.Get();
     FbxDouble3 c = fLight->Color.Get();
     light->m_color = QVector4D(c[0], c[1], c[2], 1.0f);
+
+    return light;
 }
 
 Mesh* FbxParser::parseMesh(FbxMesh* fMesh)

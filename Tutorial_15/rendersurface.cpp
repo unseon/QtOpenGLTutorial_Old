@@ -372,6 +372,8 @@ void Renderer::prepareRender()
         //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
     }
 
+    m_scene->m_mainLight->m_light->prepare();
+
     if (m_isViewportDirty) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
@@ -449,9 +451,6 @@ void Renderer::render()
 
     if (m_scene) {
         Material shadowMapMaterial("shadow_map_shading");
-
-//        m_scene->m_projectionMatrix.setToIdentity();
-//        m_scene->m_projectionMatrix.ortho(-10, 10, -10, 10, -10, 100);
         m_scene->render(&shadowMapMaterial);
     }
 
@@ -475,33 +474,33 @@ void Renderer::render()
 ////    }
 
 
-//    updateCamera();
-//    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
-//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
+    updateCamera();
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
 
-//    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
+    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height()); // Render on the whole framebuffer, complete from the lower left corner to the
 
-//    glEnable(GL_DEPTH_TEST);
-//    glDepthFunc(GL_LESS);
-//    //glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    //glEnable(GL_CULL_FACE);
 
-//    glClearColor(0, 0, 0, 1);
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-//    glEnable(GL_BLEND);
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-//    if (m_scene) {
-//        m_scene->m_projectionMatrix.setToIdentity();
-//        m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
-//        m_scene->render();
-//    }
+    if (m_scene) {
+        m_scene->m_projectionMatrix.setToIdentity();
+        m_scene->m_projectionMatrix.perspective(45.0f, 4.0f / 3.0f, 0.1f, 10000.0f);
+        m_scene->render();
+    }
 
 
-//    // bitblt to m_surface
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
-//    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+    // bitblt to m_surface
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+    glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
 
-//    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
+    m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
 }
