@@ -24,7 +24,7 @@ varying highp vec3 fragNormal;
 
 uniform mat4 NormalMatrix;
 
-uniform sampler2D texture;
+uniform sampler2D shadowmap;
 
 uniform Light light;
 uniform Material material;
@@ -45,5 +45,7 @@ void main() {
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 
-    gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);
+    //gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);
+
+    gl_FragColor = texture2D(shadowmap, vec2(fragVertex.z / 100.0, fragVertex.z / 100.0));
 }

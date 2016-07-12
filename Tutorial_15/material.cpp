@@ -143,6 +143,7 @@ void Material::activate(Scene* scene, Mesh* mesh)
     if (light->m_shadowMapTexture > 0) {
         QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
         gl->glBindTexture(2, light->m_shadowMapTexture);
+        m_program->setUniformValue("shadowmap", 2);
 
         QVector4D forward(0, -1, 0, 0);
 
