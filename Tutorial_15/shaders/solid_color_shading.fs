@@ -4,6 +4,9 @@ struct Light {
     vec4 specular;
     vec3 position;
     vec3 direction;
+
+    mat4 worldTransform;
+    mat4 projection;
 };
 
 struct Material {

@@ -5,6 +5,7 @@
 #include "scene.h"
 #include "node.h"
 #include "mesh.h"
+#include "directionallight.h"
 
 Material::Material(const QString &shaderName)
     : m_program(0),
@@ -136,6 +137,42 @@ void Material::activate(Scene* scene, Mesh* mesh)
     m_program->setUniformValue("material.opacity", m_opacity);
 
     m_program->setUniformValue("light.direction", QVector3D(lightDirView).normalized());
+
+
+    DirectionalLight* light = scene->m_mainLight->m_light;
+    if (light->m_shadowMapTexture > 0) {
+        QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
+        gl->glBindTexture(2, light->m_shadowMapTexture);
+
+        QVector4D forward(0, -1, 0, 0);
+
+        QVector3D up(0, 1, 0);
+        QMatrix4x4 localToWorld = scene->m_mainLight->netMatrix();
+        QMatrix4x4 normalWorld = localToWorld.inverted().transposed();
+
+        QVector3D viewPoint = localToWorld * QVector3D(0, 0, 0);
+        //QVector4D viewForward = QVector4D((normalWorld * forward).toVector3D()).normalized();
+        QVector4D viewForward = normalWorld * forward;
+        //QVector3D viewTarget = (localToWorld * forwardPosition).toVector3D();
+        //QVector3D viewTarget(0, 0, 0);
+        QVector3D viewTarget = viewPoint + viewForward.toVector3D();
+        QVector3D viewUp = up;
+
+        QMatrix4x4 lightViewMatrix;
+
+        lightViewMatrix.setToIdentity();
+        lightViewMatrix.lookAt(viewPoint,
+                               viewTarget,
+                               viewUp);
+
+        QMatrix4x4 lightProjection;
+        lightProjection.setToIdentity();
+        lightProjection.ortho(-20, 20, -20, 20, -60, 60);
+
+        m_program->setUniformValue("light.view", lightViewMatrix);
+        m_program->setUniformValue("light.projection", lightProjection);
+
+    }
 
     m_program->setUniformValue("scene.backgroundColor", scene->m_backgroundColor);
 }
