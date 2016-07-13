@@ -34,6 +34,8 @@ HEADERS += \
 
 DISTFILES +=
 
+
+#app_launch_images.files = $$PWD/assets/objects_maya.fbx
 app_launch_images.files += $$PWD/assets/plane.fbx
 app_launch_images.files += $$PWD/assets/monkey.fbx
 app_launch_images.files += $$PWD/assets/cube.fbx

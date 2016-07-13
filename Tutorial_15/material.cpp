@@ -44,7 +44,7 @@ void Material::init()
             m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
             m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
         } else {
-            m_shaderName = "solid_color_shadow_shading";
+            m_shaderName = "solid_color_shading";
         }
     }
 

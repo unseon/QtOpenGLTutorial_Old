@@ -62,15 +62,18 @@ Node* FbxParser::parseNode(FbxNode* fNode)
     FbxDouble3 translation = fNode->LclTranslation.Get();
     FbxDouble3 rotation = fNode->LclRotation.Get();
     FbxDouble3 scaling = fNode->LclScaling.Get();
+    FbxDouble3 postRotation = fNode->PostRotation.Get();
 
     node->m_position = QVector3D(translation[0], translation[1], translation[2]);
     node->m_rotation = QVector3D(rotation[0], rotation[1], rotation[2]);
+    node->m_rotation += QVector3D(postRotation[0], postRotation[1], postRotation[2]);
     node->m_scale = QVector3D(scaling[0], scaling[1], scaling[2]);
 
     qDebug() << "m_name" << node->m_name;
     qDebug() << "m_position" << node->m_position;
     qDebug() << "m_rotation" << node->m_rotation;
     qDebug() << "m_scale" << node->m_scale;
+    //qDebug() << "pivot_rotation" << pivotRotation[0] << pivotRotation[1] << pivotRotation[2];
 
     for(int i = 0; i < fNode->GetNodeAttributeCount(); i++) {
         FbxNodeAttribute* pAttribute = fNode->GetNodeAttributeByIndex(i);
