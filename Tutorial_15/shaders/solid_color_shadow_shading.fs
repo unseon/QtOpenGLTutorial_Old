@@ -4,6 +4,8 @@ struct Light {
     vec4 specular;
     vec3 position;
     vec3 direction;
+    mat4 view;
+    mat4 projection;
 };
 
 struct Material {
@@ -19,6 +21,7 @@ struct Scene {
     vec4 backgroundColor;
 };
 
+varying highp vec3 lightVertex;
 varying highp vec3 fragVertex;
 varying highp vec3 fragNormal;
 
@@ -31,6 +34,15 @@ uniform Material material;
 uniform Scene scene;
 
 void main() {
+    vec2 lightUV = lightVertex.xy;
+    lightUV += vec2(0.5, 0.5);
+    lightUV *= vec2(0.5, 0.5);
+
+
+    float lightZ = texture2D(shadowmap, lightUV).x;
+
+    lightZ = lightVertex.z ;
+
     vec3 viewL = light.direction;
     vec3 viewE = normalize(-fragVertex);
     vec3 viewN = fragNormal;
@@ -45,7 +57,12 @@ void main() {
     vec4 Ispec = light.specular * pow(cosAlpha, 5.0);
     Ispec = clamp(Ispec, 0.0, 1.0);
 
-    //gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);
+    gl_FragColor = vec4((scene.backgroundColor + Idiff + Ispec).xyz, material.opacity);
 
-    gl_FragColor = texture2D(shadowmap, vec2(fragVertex.z / 100.0, fragVertex.z / 100.0));
+//    if (lightZ > lightVertex.z)
+//        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    //gl_FragColor = vec4(lightZ, lightZ, lightZ, 1.0);
+    gl_FragColor = texture2D(shadowmap, lightUV);
+
+    //gl_FragColor = texture2D(shadowmap, vec2(fragVertex.z / 100.0, fragVertex.z / 100.0));
 }

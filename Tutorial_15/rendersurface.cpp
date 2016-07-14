@@ -409,7 +409,7 @@ void Renderer::render()
     if (m_scene->m_mainLight) {
         m_scene->m_mainLight->m_light->prepare();
 
-        QVector4D forward(0, -1, 0, 0);
+        QVector4D forward(0, 0, -1, 0);
 
         QVector3D up(0, 1, 0);
 
@@ -422,19 +422,20 @@ void Renderer::render()
         //QVector3D viewTarget = (localToWorld * forwardPosition).toVector3D();
         //QVector3D viewTarget(0, 0, 0);
         QVector3D viewTarget = viewPoint + viewForward.toVector3D();
-        QVector3D viewUp = up;
+        QVector3D viewUp = normalWorld * up;
 
         QMatrix4x4 lightViewMatrix;
 
         lightViewMatrix.setToIdentity();
         lightViewMatrix.lookAt(viewPoint,
                                viewTarget,
-                               viewUp);
+                               viewUp.normalized());
 
         m_scene->m_viewMatrix = lightViewMatrix;
 
         m_scene->m_projectionMatrix.setToIdentity();
         m_scene->m_projectionMatrix.ortho(-20, 20, -20, 20, -60, 60);
+
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, m_scene->m_mainLight->m_light->m_shadowMapFrameBuffer);
@@ -446,7 +447,7 @@ void Renderer::render()
     glDepthFunc(GL_LESS);
     //glEnable(GL_CULL_FACE);
 
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0, 0, 1, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (m_scene) {
@@ -465,13 +466,7 @@ void Renderer::render()
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
 
-////    for (int i = 0; i < m_viewportSize.width() * m_viewportSize.height(); i++) {
-////        //qDebug() << depthData[i] * 255;
-////        m_data[i * 4] = depthData[i] * 255;
-////        m_data[i * 4 + 1] = depthData[i] * 255;
-////        m_data[i * 4 + 2] = depthData[i] * 255;
-////        m_data[i * 4 + 3] = 255;
-////    }
+
 
 
     updateCamera();

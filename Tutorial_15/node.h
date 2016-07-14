@@ -25,6 +25,8 @@ public:
     QVector3D m_rotation;
     QVector3D m_scale;
 
+    QVector3D m_rotationPivot;
+
     QMatrix4x4 m_transform;
 
     Node* m_parent;

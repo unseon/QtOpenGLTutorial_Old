@@ -66,7 +66,7 @@ Node* FbxParser::parseNode(FbxNode* fNode)
 
     node->m_position = QVector3D(translation[0], translation[1], translation[2]);
     node->m_rotation = QVector3D(rotation[0], rotation[1], rotation[2]);
-    node->m_rotation += QVector3D(postRotation[0], postRotation[1], postRotation[2]);
+    node->m_rotation -= QVector3D(postRotation[0], postRotation[1], postRotation[2]);
     node->m_scale = QVector3D(scaling[0], scaling[1], scaling[2]);
 
     qDebug() << "m_name" << node->m_name;
@@ -90,7 +90,7 @@ Node* FbxParser::parseNode(FbxNode* fNode)
     } else if (fNode->GetLight()) {
         qDebug() << "Directional Light";
         node->m_light = parseLight(fNode->GetLight());
-
+        node->m_rotationPivot.setX(-90.0f);
         if (m_scene->m_mainLight == NULL) {
             m_scene->m_mainLight = node;
         }

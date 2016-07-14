@@ -8,7 +8,11 @@
 
 Node::Node(Node* parent)
     :m_mesh(0),
-      m_light(0)
+      m_light(0),
+      m_position(0.0f, 0.0f, 0.0f),
+      m_rotation(0.0f, 0.0f, 0.0f),
+      m_scale(1.0f, 1.0f, 1.0f),
+      m_rotationPivot(0.0f, 0.0f, 0.0f)
 {
     m_parent = parent;
 }
@@ -59,9 +63,14 @@ void Node::updateMatrix()
     mat.setToIdentity();
 
     mat.translate(m_position);
+
     mat.rotate(m_rotation.z(), 0.0f, 0.0f, 1.0f);
     mat.rotate(m_rotation.y(), 0.0f, 1.0f, 0.0f);
     mat.rotate(m_rotation.x(), 1.0f, 0.0f, 0.0f);
+
+    mat.rotate(m_rotationPivot.z(), 1.0f, 0.0f, 0.0f);
+    mat.rotate(m_rotationPivot.y(), 1.0f, 0.0f, 0.0f);
+    mat.rotate(m_rotationPivot.x(), 1.0f, 0.0f, 0.0f);
 
     mat.scale(m_scale);
 
