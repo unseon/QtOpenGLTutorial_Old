@@ -24,6 +24,7 @@ varying highp vec3 fragVertex;
 varying highp vec3 fragNormal;
 
 uniform sampler2D texture;
+uniform sampler2D shadowmap;
 
 uniform mat4 NormalMatrix;
 
@@ -37,7 +38,7 @@ void main() {
     vec3 viewN = fragNormal;
     vec3 viewR = reflect(viewL, viewN);
 
-    vec4 diffColor = texture2D(texture, texc);
+    vec4 diffColor = texture2D(shadowmap, texc);
     float cosTheta = clamp(dot(viewN, -viewL), 0.0, 1.0);
     vec4 Idiff = diffColor * cosTheta;
     Idiff = clamp(Idiff, 0.0, 1.0);

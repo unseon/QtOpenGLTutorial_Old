@@ -413,7 +413,7 @@ void Renderer::render()
 
         QVector3D up(0, 1, 0);
 
-        QMatrix4x4 localToWorld = m_scene->m_mainLight->netMatrix();
+        QMatrix4x4 localToWorld = m_scene->m_modelMatrix * m_scene->m_mainLight->netMatrix();
         QMatrix4x4 normalWorld = localToWorld.inverted().transposed();
 
         QVector3D viewPoint = localToWorld * QVector3D(0, 0, 0);
@@ -465,6 +465,7 @@ void Renderer::render()
 
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
+
 
 
 

@@ -45,6 +45,10 @@ void Material::init()
             m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
         } else {
             m_shaderName = "solid_color_shadow_shading";
+
+            m_texture = new QOpenGLTexture(QImage("uvtemplate.png").mirrored());
+            m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
+            m_texture->setMagnificationFilter(QOpenGLTexture::Nearest);
         }
     }
 
@@ -140,7 +144,7 @@ void Material::activate(Scene* scene, Mesh* mesh)
 
 
     DirectionalLight* light = scene->m_mainLight->m_light;
-    if (light->m_shadowMapTexture > 0) {
+    if (light->m_shadowMapTexture > 0 && m_shaderName == "texture_shading") {
         QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
         glActiveTexture(GL_TEXTURE2);
         gl->glBindTexture(GL_TEXTURE_2D, light->m_shadowMapTexture);

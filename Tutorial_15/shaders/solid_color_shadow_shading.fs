@@ -24,10 +24,12 @@ struct Scene {
 varying highp vec3 lightVertex;
 varying highp vec3 fragVertex;
 varying highp vec3 fragNormal;
+varying highp vec4 position;
 
 uniform mat4 NormalMatrix;
 
 uniform sampler2D shadowmap;
+uniform sampler2D texture;
 
 uniform Light light;
 uniform Material material;
@@ -39,9 +41,6 @@ void main() {
     lightUV *= vec2(0.5, 0.5);
 
 
-    float lightZ = texture2D(shadowmap, lightUV).x;
-
-    lightZ = lightVertex.z ;
 
     vec3 viewL = light.direction;
     vec3 viewE = normalize(-fragVertex);
@@ -62,7 +61,11 @@ void main() {
 //    if (lightZ > lightVertex.z)
 //        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
     //gl_FragColor = vec4(lightZ, lightZ, lightZ, 1.0);
-    gl_FragColor = texture2D(shadowmap, lightUV);
+    //gl_FragColor = texture2D(texture, position.xy);
+
+
+
+    gl_FragColor = vec4(0, lightUV.y, 0, 1);
 
     //gl_FragColor = texture2D(shadowmap, vec2(fragVertex.z / 100.0, fragVertex.z / 100.0));
 }
