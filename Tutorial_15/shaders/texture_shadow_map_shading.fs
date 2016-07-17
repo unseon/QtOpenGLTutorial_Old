@@ -4,8 +4,6 @@ struct Light {
     vec4 specular;
     vec3 position;
     vec3 direction;
-    mat4 view;
-    mat4 projection;
 };
 
 struct Material {
@@ -22,14 +20,14 @@ struct Scene {
 };
 
 varying highp vec4 lightVertex;
+varying mediump vec2 texc;
 varying highp vec3 fragVertex;
 varying highp vec3 fragNormal;
-varying highp vec4 position;
+
+uniform sampler2D texture;
+uniform sampler2D shadowmap;
 
 uniform mat4 NormalMatrix;
-
-uniform sampler2D shadowmap;
-uniform sampler2D texture;
 
 uniform Light light;
 uniform Material material;
@@ -41,7 +39,7 @@ void main() {
     vec3 viewN = fragNormal;
     vec3 viewR = reflect(viewL, viewN);
 
-    vec4 diffColor = material.diffuse;
+    vec4 diffColor = texture2D(texture, texc);
     float cosTheta = clamp(dot(viewN, -viewL), 0.0, 1.0);
     vec4 Idiff = diffColor * cosTheta;
     Idiff = clamp(Idiff, 0.0, 1.0);
@@ -59,9 +57,11 @@ void main() {
 
     float depth = ((lightVertex.z / lightVertex.w) + 1.0) * 0.5;
 
+    if (viewN.z < -0.1) {
+        gl_FragColor = vec4(Idiff.xyz * 0.3, 1.0);
+    } else
     if (texture2D(shadowmap, lightUV).x < depth - 0.01) {
         gl_FragColor = vec4(Idiff.xyz * 0.3, 1.0);
-
     } else {
         //gl_FragColor = texture2D(texture, texc) * 0.5 + texture2D(shadowmap, lightUV);
         gl_FragColor = finalColor;

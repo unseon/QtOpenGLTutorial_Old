@@ -139,7 +139,7 @@ void RenderSurface::wheelEvent(QWheelEvent *event)
 {
     qDebug() << "Wheel Event" << event->angleDelta();
     float curDist = m_renderer->camDistance();
-    m_renderer->setCamDistance(curDist + event->angleDelta().y() * -0.005);
+    m_renderer->setCamDistance(curDist + event->angleDelta().y() * -0.02);
 
     update();
 }
@@ -465,10 +465,6 @@ void Renderer::render()
 
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
-
-
-
-
 
     updateCamera();
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);

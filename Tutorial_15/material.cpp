@@ -28,7 +28,7 @@ void Material::init()
     if (m_shaderName.isEmpty()) {
 
         if (!m_textureFile.isEmpty() && !m_normalmapFile.isEmpty()) {
-            m_shaderName = "normal_map_shading";
+            m_shaderName = "normal_map_shadow_shading";
 
             m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
             m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
@@ -38,7 +38,7 @@ void Material::init()
             m_normalmap->setMinificationFilter(QOpenGLTexture::Nearest);
             m_normalmap->setMagnificationFilter(QOpenGLTexture::Nearest);
         } else if (!m_textureFile.isEmpty()) {
-            m_shaderName = "texture_shading";
+            m_shaderName = "texture_shadow_map_shading";
 
             m_texture = new QOpenGLTexture(QImage(m_textureFile).mirrored());
             m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
@@ -144,7 +144,7 @@ void Material::activate(Scene* scene, Mesh* mesh)
 
 
     DirectionalLight* light = scene->m_mainLight->m_light;
-    if (light->m_shadowMapTexture > 0 && m_shaderName == "texture_shading") {
+    if (light->m_shadowMapTexture > 0) {
         QOpenGLFunctions *gl = QOpenGLContext::currentContext()->functions();
         glActiveTexture(GL_TEXTURE2);
         gl->glBindTexture(GL_TEXTURE_2D, light->m_shadowMapTexture);

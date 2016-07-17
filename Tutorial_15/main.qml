@@ -10,14 +10,23 @@ Window {
 
     RenderSurface {
         id: renderSurface
-        anchors.fill: parent
+        width: 200
+        height: 200
+    }
+
+    RenderSurface {
+        x: 200
+        y: 200
+        width: 200
+        height: 200
     }
 
     Text {
-        text: "FPS: " + renderSurface.fps.toFixed(2)
+        text: "Hello Qt"
         anchors.top: parent.top
         anchors.left: parent.left
         color: "white"
         font.pixelSize: 50
     }
+
 }
