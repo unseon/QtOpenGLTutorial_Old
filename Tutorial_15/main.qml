@@ -10,15 +10,8 @@ Window {
 
     RenderSurface {
         id: renderSurface
-        width: 200
-        height: 200
-    }
 
-    RenderSurface {
-        x: 200
-        y: 200
-        width: 200
-        height: 200
+        anchors.fill: parent
     }
 
     Text {
@@ -28,5 +21,4 @@ Window {
         color: "white"
         font.pixelSize: 50
     }
-
 }

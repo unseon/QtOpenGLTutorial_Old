@@ -33,35 +33,15 @@ private:
     QSize m_viewportSize;
     QQuickWindow *m_window;
 
-    QOpenGLShaderProgram *m_program;
-    QOpenGLShaderProgram *m_surfaceProgram;
-
-    QOpenGLTexture *m_texture;
-    QOpenGLTexture *m_normalmap;
-
-    QMatrix4x4 m_projection;
-    QMatrix4x4 m_view;
-    QMatrix4x4 m_model;
-
     float m_distance;
     float m_rotationX;
     float m_rotationY;
 
-    GLuint m_elementBuffer;
-
-    vector<float> m_vertices;
-    vector<float> m_uvs;
-    vector<unsigned int> m_indices;
-    vector<float> m_normals;
-    vector<float> m_tangents;
-    vector<float> m_bitangents;
-
-    QString m_textureFile;
-    QString m_normalmapFile;
-
     GLuint m_frameBuffer;
-    GLuint m_renderedTexture;
+    GLuint m_renderedTextureId;
     GLuint m_depthRenderBuffer;
+
+    QOpenGLTexture* m_renderedTexture;
 
     bool m_isViewportDirty;
 

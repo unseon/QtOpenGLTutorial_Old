@@ -185,18 +185,13 @@ void RenderSurface::keyReleaseEvent(QKeyEvent *event)
 }
 
 Renderer::Renderer()
-    : m_program(0),
-      m_surfaceProgram(0),
-      m_texture(0),
-//      m_rotationX(45.0f),
-//      m_rotationY(45.0f),
-      m_rotationX(0.0f),
+    : m_rotationX(0.0f),
       m_rotationY(0.0f),
       m_distance(10.0f),
       m_surface(300, 200, QImage::QImage::Format_ARGB32),
       m_data(0),
     　m_frameBuffer(0),
-    m_renderedTexture(0),
+    m_renderedTextureId(0),
     m_depthRenderBuffer(0),
     m_scene(0)
 {
@@ -338,30 +333,30 @@ void Renderer::prepareRender()
     updateCamera();
 
     if (m_frameBuffer == 0 ) {
-        qDebug() << "glBufferData: " << m_indices.size() * 3;
-        glGenBuffers(1, &m_elementBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_elementBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(unsigned int), m_indices.data(), GL_STATIC_DRAW);
-
-
         // frame buffer initialize
         glGenFramebuffers(1, &m_frameBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
 
 
-        glGenTextures(1, &m_renderedTexture);
+        m_renderedTexture = new QOpenGLTexture(QOpenGLTexture::Target2D);
+        m_renderedTexture->setMagnificationFilter(QOpenGLTexture::Nearest);
+        m_renderedTexture->setMinificationFilter(QOpenGLTexture::Nearest);
+        //m_renderedTexture->allocateStorage(QOpenGLTexture::RGBA, QOpenGLTexture::UInt8);
 
-        // "Bind" the newly created texture : all future texture functions will modify this texture
-        glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 
-        // Give an empty image to OpenGL ( the last "0" )
-        //glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 300, 200, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+//        glGenTextures(1, &m_renderedTextureId);
 
-        // Poor filtering. Needed !
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//        // "Bind" the newly created texture : all future texture functions will modify this texture
+//        glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
 
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture, 0);
+//        // Give an empty image to OpenGL ( the last "0" )
+//        //glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, 300, 200, 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+//        // Poor filtering. Needed !
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture->textureId(), 0);
         GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
         glDrawBuffers(1, DrawBuffers);
 
@@ -375,14 +370,20 @@ void Renderer::prepareRender()
     m_scene->m_mainLight->m_light->prepare();
 
     if (m_isViewportDirty) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+
+
+//        m_renderedTexture->setSize(m_viewportSize.width(), m_viewportSize.height());
+//        m_renderedTexture->setFormat(QOpenGLTexture::NoFormat);
+//        m_renderedTexture->setMipLevels(0);
+//        m_renderedTexture->allocateStorage(QOpenGLTexture::RGBA, QOpenGLTexture::UInt8);
+
+        glBindTexture(GL_TEXTURE_2D, m_renderedTexture->textureId());
         glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+
+
 
         glBindTexture(GL_TEXTURE_2D, m_scene->m_mainLight->m_light->m_shadowMapTexture);
-        //glTexImage2D(GL_TEXTURE_2D, 0,GL_DEPTH_COMPONENT16, m_viewportSize.width(), m_viewportSize.height(), 0,GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA, m_viewportSize.width(), m_viewportSize.height(), 0,GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
         glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
@@ -491,7 +492,7 @@ void Renderer::render()
 
     // bitblt to m_surface
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTextureId);
     glReadPixels(0, 0, m_viewportSize.width(), m_viewportSize.height(), GL_RGBA, GL_UNSIGNED_BYTE, m_data);
 
     m_surface = QImage(m_data, m_viewportSize.width(), m_viewportSize.height(), QImage::Format_RGBA8888).mirrored();
