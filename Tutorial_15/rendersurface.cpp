@@ -249,12 +249,14 @@ void Renderer::initializeScene()
     //const char* myImportFile = "../../cube.fbx";
     //const char* myImportFile = "../../solid_cube.fbx";
 
-    QFile file(myImportFile);
 
-    qDebug() << QDir::currentPath();
+    QFile file(qApp->applicationDirPath() + "/" + myImportFile);
+
+    qDebug() << qApp->applicationDirPath();
+    //qDebug() << QDir::currentPath();
     qDebug() << "exist? : " << file.exists();
 
-    if (!myImporter->Initialize(myImportFile, -1, mySdkManager->GetIOSettings())) {
+    if (!myImporter->Initialize(file.fileName().toLatin1(), -1, mySdkManager->GetIOSettings())) {
         qDebug() << "Call to FbxImporter::Initialize() failed.";
         qDebug() << "Error returned: " << myImporter->GetStatus().GetErrorString();
     }
@@ -367,7 +369,9 @@ void Renderer::prepareRender()
         //glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
     }
 
-    m_scene->m_mainLight->m_light->prepare();
+    if (m_scene->m_mainLight) {
+        m_scene->m_mainLight->m_light->prepare();
+    }
 
     if (m_isViewportDirty) {
 
